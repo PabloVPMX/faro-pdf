@@ -1,5 +1,5 @@
 """Isolated, editable multiline text blocks, rendered from real PDF content."""
-import io,re,uuid,hashlib
+import io,re,uuid,hashlib,math
 from functools import lru_cache
 from pathlib import Path
 from fontTools.ttLib import TTFont
@@ -53,7 +53,32 @@ def add_font(w,page,path):
         fonts[key]=w._add_object(DictionaryObject({NameObject('/Type'):NameObject('/Font'),NameObject('/Subtype'):NameObject('/Type0'),NameObject('/BaseFont'):name,NameObject('/Encoding'):NameObject('/Identity-H'),NameObject('/DescendantFonts'):ArrayObject([w._add_object(descendant)]),NameObject('/ToUnicode'):stream(unicode)}))
     return key
 
-def replace_block(data,page_index,ordinals,expected,value,size,matrix,color,face=None,block_id=None):
+def wrapped_lines(value,font,size,width,base_font):
+    """Keep logical text intact; soft wraps only change PDF line placement."""
+    if font.standard:
+        from pypdf._codecs.core_font_metrics import CORE_FONT_METRICS
+        widths=CORE_FONT_METRICS[str(base_font).lstrip('/')].character_widths
+        advance=lambda char: widths.get(char,widths['default'])*size/1000
+    else:
+        advance=lambda char: font.advance(font.edit(b'',char))*size/1000
+    lines=[];offset=0
+    for paragraph in value.split('\n'):
+        start=0
+        while start<len(paragraph):
+            end=start;used=0;space=None
+            while end<len(paragraph):
+                step=advance(paragraph[end])
+                if end>start and used+step>width:break
+                used+=step;end+=1
+                if paragraph[end-1].isspace():space=end
+            if end<len(paragraph) and space is not None and space>start:end=space
+            lines.append((offset+start,paragraph[start:end]));start=end
+        if not paragraph:lines.append((offset,''))
+        offset+=len(paragraph)+1
+    return lines
+
+
+def replace_block(data,page_index,ordinals,expected,value,size,matrix,color,face=None,block_id=None,box=None):
     value=value.replace('\r\n','\n').replace('\r','\n')
     if any(not c.isprintable() and c!='\n' for c in value):raise ValueError('El bloque contiene caracteres de control no admitidos.')
     own=block_records(data,page_index);existing=next((key for key,r in own.items() if r['ordinals']==ordinals),None)
@@ -63,6 +88,7 @@ def replace_block(data,page_index,ordinals,expected,value,size,matrix,color,face
             data=extend_for_text(data,page_index,ordinals[0],value.replace('\n',''))
             own=block_records(data,page_index)
         record=own[existing];matrix=tuple(map(float,record['meta']['/Matrix']))
+        if box is None and '/Box' in record['meta']:box=tuple(map(float,record['meta']['/Box']))
         font_name=record['meta']['/Font'];block_id=existing
         w=writer_for(data);page=w.pages[page_index]
         from pypdf.generic import ContentStream
@@ -85,8 +111,15 @@ def replace_block(data,page_index,ordinals,expected,value,size,matrix,color,face
     if face:font_name=add_font(w,page,face)
     font=_Font(page['/Resources']['/Font'][font_name].get_object())
     a,b,c,d,e,f=matrix
+    lines=[];offset=0
+    if box:
+        width=(box[2]-box[0])/max(math.hypot(a,b),1e-8)
+        lines=wrapped_lines(value,font,size,max(1,width),page['/Resources']['/Font'][font_name]['/BaseFont'])
+    else:
+        for line in value.split('\n'):
+            lines.append((offset,line));offset+=len(line)+1
     commands=[block_id+' BMC','q',' '.join(num(v/255) for v in color)+' rg','BT',f'{font_name} {num(size)} Tf','0 Tc 0 Tw 100 Tz 0 Ts 0 Tr']
-    for row,line in enumerate(value.split('\n')):
+    for row,(_,line) in enumerate(lines):
         encoded=font.edit(b'',line)
         line_matrix=(a,b,c,d,e-c*size*1.3*row,f-d*size*1.3*row)
         commands.append(' '.join(num(v) for v in line_matrix)+' Tm <'+encoded.hex()+'> Tj')
@@ -94,6 +127,10 @@ def replace_block(data,page_index,ordinals,expected,value,size,matrix,color,face
     append_content(w,page,('\n'.join(commands)+'\n').encode('ascii'))
     metadata=DictionaryObject(dict(page.get('/FaroTextData',{})))
     metadata[NameObject(block_id)]=DictionaryObject({NameObject('/Text'):TextStringObject(value),NameObject('/Matrix'):ArrayObject([FloatObject(v) for v in matrix]),NameObject('/Size'):FloatObject(size),NameObject('/Font'):NameObject(font_name),NameObject('/Color'):ArrayObject([NumberObject(v) for v in color])})
+    if box:
+        metadata[NameObject(block_id)][NameObject('/Box')]=ArrayObject([FloatObject(v) for v in box])
+        metadata[NameObject(block_id)][NameObject('/Lines')]=ArrayObject([TextStringObject(line) for _,line in lines])
+        metadata[NameObject(block_id)][NameObject('/Starts')]=ArrayObject([NumberObject(start) for start,_ in lines])
     page[NameObject('/FaroTextData')]=metadata
     result=finish(w);_prepare(result,page_index)
     return result,block_id
@@ -103,8 +140,12 @@ def block_geometry(model,textpage,objects,record):
     from engine import align_character_geometry
     selected=[objects[i] for i in record['ordinals']];targets={C.cast(o.raw,C.c_void_p).value for o in selected}
     geometry=model.page_character_geometry(textpage,targets);meta=record['meta'];size=float(meta['/Size']);a,b,c,d,e,f=map(float,meta['/Matrix'])
-    rows=[];object_index=0;end=(e,f)
-    lines=str(meta['/Text']).split('\n')
+    value=str(meta['/Text']);rows=[None]*len(value);object_index=0;end=(e,f)
+    lines=list(map(str,meta.get('/Lines',value.split('\n'))))
+    starts=list(map(int,meta.get('/Starts',[])))
+    if not starts:
+        offset=0
+        for line in lines:starts.append(offset);offset+=len(line)+1
     for line_index,line in enumerate(lines):
         origin=(e-c*size*1.3*line_index,f-d*size*1.3*line_index)
         glyphs=[]
@@ -112,8 +153,12 @@ def block_geometry(model,textpage,objects,record):
             obj=selected[object_index];object_index+=1;glyphs=geometry.get(C.cast(obj.raw,C.c_void_p).value,[])
         aligned=align_character_geometry(glyphs,line,origin)
         if aligned is None:raise ValueError('No coincide la geometría de la línea de texto.')
-        rows.extend(aligned);end=(aligned[-1]['bounds'][1],aligned[-1]['origin'][1]) if aligned else origin
-        if line_index<len(lines)-1:rows.append(dict(character='\n',origin=end,bounds=(end[0],end[0],end[1],end[1])))
+        start=starts[line_index]
+        rows[start:start+len(line)]=aligned
+        end=(aligned[-1]['bounds'][1],aligned[-1]['origin'][1]) if aligned else origin
+        after=start+len(line)
+        if after<len(value) and value[after]=='\n':rows[after]=dict(character='\n',origin=end,bounds=(end[0],end[0],end[1],end[1]))
+    if any(row is None for row in rows):raise ValueError('No se pudo situar cada carácter del cuadro de texto.')
     return rows,end
 
 def move_text(data,page,ordinals,dx,dy):
@@ -141,4 +186,7 @@ def move_text(data,page,ordinals,dx,dy):
             metadata=target['/FaroTextData'][key]
             values=list(map(float,metadata['/Matrix']));values[4]+=dx;values[5]+=dy
             metadata[NameObject('/Matrix')]=ArrayObject([FloatObject(v) for v in values])
+            if '/Box' in metadata:
+                l,b,r,t=map(float,metadata['/Box'])
+                metadata[NameObject('/Box')]=ArrayObject([FloatObject(v) for v in (l+dx,b+dy,r+dx,t+dy)])
     result=finish(w);_prepare(result,page);return result

@@ -290,7 +290,9 @@ class Document:
             bounds=(min(b[0] for b in boxes),min(b[1] for b in boxes),max(b[2] for b in boxes),max(b[3] for b in boxes))
             info=self.info(indices[0]);scale=(info['matrix'][2]**2+info['matrix'][3]**2)**.5
             bounds=(min(bounds[0],end[0]),min(bounds[1],end[1]),max(bounds[2],end[0]+info['size']*scale*.4),max(bounds[3],end[1]+info['size']*scale*.8))
-            runs.append(dict(indices=indices,characters=chars,bounds=bounds,baseline=info['matrix'][5],size=info['size']*scale,key=('Faro',key),layout=key,text=str(record['meta']['/Text']),end_origin=end,matrix=tuple(map(float,record['meta']['/Matrix']))))
+            box=tuple(map(float,record['meta']['/Box'])) if '/Box' in record['meta'] else None
+            if box:bounds=(min(bounds[0],box[0]),min(bounds[1],box[1]),max(bounds[2],box[2]),max(bounds[3],box[3]))
+            runs.append(dict(indices=indices,characters=chars,bounds=bounds,baseline=info['matrix'][5],size=info['size']*scale,key=('Faro',key),layout=key,text=str(record['meta']['/Text']),end_origin=end,matrix=tuple(map(float,record['meta']['/Matrix'])),box_bounds=box))
         self._text_runs = runs
         return runs
 
@@ -442,18 +444,18 @@ class Document:
         staged=extend_for_text(self._edit_data,self.index,ordinal,value)
         return patch_native(staged, self.index, ordinal, info['text'], value)
 
-    def layout_text_bytes(self,indices,value,size,face=None,color=None,block_id=None):
+    def layout_text_bytes(self,indices,value,size,face=None,color=None,block_id=None,box=None):
         from text_layout import replace_block
         info=self.info(indices[0]);run=self.text_run(indices[0])
         expected=run.get('text') if run and run.get('layout') else ''.join(r['character'] for i in indices for r in self.character_geometry(i))
         if len(indices)==1 and not (run and run.get('layout')):expected=info['text']
         matrix=run.get('matrix',info['matrix']) if run else info['matrix']
         ordinals=[sum(o.type==TEXT for o in self.objects[:i]) for i in indices]
-        return replace_block(self._edit_data,self.index,ordinals,expected,value,size,matrix,color or info.get('color',(0,0,0)),face,block_id)
+        return replace_block(self._edit_data,self.index,ordinals,expected,value,size,matrix,color or info.get('color',(0,0,0)),face,block_id,box)
 
-    def apply_text_layout(self,indices,value,size,face=None,color=None,block_id=None):
+    def apply_text_layout(self,indices,value,size,face=None,color=None,block_id=None,box=None):
         from text_layout import block_records
-        data,key=self.layout_text_bytes(indices,value,size,face,color,block_id)
+        data,key=self.layout_text_bytes(indices,value,size,face,color,block_id,box)
         record=block_records(data,self.index).get(key)
         self._apply_native_bytes(indices,data,record['ordinals'] if record else [])
         return key

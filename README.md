@@ -16,8 +16,8 @@ La interfaz actual está en español.
 
 Para **Windows 10/11 de 64 bits**:
 
-- [Descargar instalador de Faro PDF 1.0.2](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.0.2/FaroPDF-1.0.2-Instalar.exe)
-- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.0.2/FaroPDF-1.0.2-Portable.zip)
+- [Descargar instalador de Faro PDF 1.1.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.1.0/FaroPDF-1.1.0-Instalar.exe)
+- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.1.0/FaroPDF-1.1.0-Portable.zip)
 - [Ver todas las versiones y notas](https://github.com/PabloVPMX/faro-pdf/releases)
 
 El instalador incluye Python, Qt y PDFium; no hace falta instalarlos por
@@ -36,12 +36,14 @@ desactivar el antivirus. Consulta nuestra [Code signing policy](CODE_SIGNING.md)
 
 ## Qué puedes hacer
 
-- Leer PDF, navegar por páginas y ajustar el zoom.
+- Leer PDF con desplazamiento vertical continuo, navegar por páginas y ajustar el zoom.
 - Editar texto nativo directamente en sus recuadros: seleccionar, añadir y
   borrar letras, escribir acentos e insertar saltos de línea.
 - Conservar la fuente original cuando sus recursos permiten verificar el
   cambio; elegir otra fuente es una acción explícita.
-- Añadir texto, cambiar su fuente y tamaño y mover sus cuadros.
+- Dibujar cuadros de texto sobre la hoja, escribir dentro y ajustar su fuente
+  y tamaño en una barra aparte. El texto nuevo se ajusta al ancho del cuadro.
+- Mover los cuadros de texto y volver a editarlos después de guardar.
 - Insertar imágenes, moverlas, redimensionarlas desde sus bordes y borrarlas.
 - Combinar varios PDF al inicio, al final o en una posición intermedia.
 - Mover y borrar páginas, deshacer y rehacer, y guardar una copia.
@@ -54,11 +56,18 @@ paneles flotantes para dejar espacio al documento.
 1. Abre un PDF con el menú Archivo, arrastrándolo a la ventana o con «Abrir con».
 2. Elige **Editar texto** y haz clic dentro de un recuadro.
 3. **Enter** añade una línea; **Ctrl+Enter** o clic fuera aplica; **Esc** cancela.
-4. En **Añadir texto**, haz clic y escribe. Usa las opciones flotantes para
-   elegir el estilo y el tirador verde para mover el cuadro.
+4. En **Añadir texto**, arrastra un recuadro sobre la hoja y escribe dentro.
+   La barra de formato permite elegir la fuente y el tamaño sin abrir otra
+   ventana. Un clic también crea un cuadro de tamaño inicial. Usa el tirador
+   verde para moverlo; el cuadro crece hacia abajo si hacen falta más líneas.
 5. En **Imágenes**, arrastra la imagen o sus tiradores. Las esquinas conservan
    la proporción. El menú Edición permite insertar imágenes y organizar páginas.
 6. Guarda con **Archivo → Guardar copia**. **Ctrl+Z** deshace.
+
+La vista continua está activada al abrir el documento. Puedes desactivarla
+en **Ver → Desplazamiento vertical continuo** para ver una sola página.
+Desplazarte mientras escribes conserva la edición en su página; hacer clic
+en otra página aplica el cambio antes de comenzar a trabajar allí.
 
 ## Límites actuales
 
@@ -67,8 +76,8 @@ paneles flotantes para dejar espacio al documento.
   rechazar cambios para evitar alterar el resto de la página.
 - No incluye todavía impresión, búsqueda, firmas digitales de documentos,
   edición de PDF con contraseña ni recomposición automática de párrafos.
-- Los saltos de línea son explícitos; no hay ajuste automático al ancho de
-  una columna.
+- Los cuadros nuevos ajustan sus líneas al ancho. El texto original conserva
+  su disposición; no se recompone automáticamente como un documento de Word.
 - **Borrar texto no es una redacción segura.** El guardado incremental puede
   conservar revisiones anteriores dentro del archivo. No lo uses para ocultar
   información confidencial de manera irreversible.

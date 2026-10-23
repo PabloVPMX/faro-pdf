@@ -206,6 +206,7 @@ class InlineController:
         self.session = dict(index=index, info=info, version=model.current_version,
                             page=model.index, click=click, indices=list(indices),layout=run.get('layout') if run else None,
                             end_origin=run.get('end_origin') if run else None)
+        if run and run.get('box_bounds'):self.session['box_bounds']=run['box_bounds']
         self.panel.show()
         self.status.setText(self.source_description(info))
         if info['type'] == TEXT:
@@ -325,6 +326,7 @@ class InlineController:
         self.editor.document().undoAvailable.connect(self.window.undo_button.setEnabled)
         self.editor.document().redoAvailable.connect(self.window.redo_button.setEnabled)
         canvas.scene().addItem(self.editor)
+        self.window.text_format.show()
         self.reset_caret()
         self.apply.setEnabled(True)
         self.update_style()
@@ -378,14 +380,14 @@ class InlineController:
             self.session['characters'] = self.session['original_characters']
             self.background_item.setPixmap(self.original_background)
             self.session['end_origin']=self.session.get('original_end_origin')
-        elif self.session.get('layout') or self.fonts.currentData() or '\n' in self.editor.toPlainText() or abs(self.size.value()-self.session['start_size'])>=.01:
+        elif self.session.get('box_bounds') or self.session.get('layout') or self.fonts.currentData() or '\n' in self.editor.toPlainText() or abs(self.size.value()-self.session['start_size'])>=.01:
             self.pristine=True
             candidate=page=textpage=None
             try:
                 from text_layout import block_records,block_geometry
                 from app import pixmap
                 model=self.window.model
-                data,key=model.layout_text_bytes(self.session['indices'],self.editor.toPlainText(),self.raw_size(),self.fonts.currentData(),self.session['color'],self.session.get('new_layout_id'))
+                data,key=model.layout_text_bytes(self.session['indices'],self.editor.toPlainText(),self.raw_size(),self.fonts.currentData(),self.session['color'],self.session.get('new_layout_id'),self.session.get('box_bounds'))
                 self.session['new_layout_id']=key
                 candidate=pdf.PdfDocument(data);page=candidate[model.index];textpage=page.get_textpage()
                 objects=[o for o in page.get_objects(max_depth=0,textpage=textpage) if o.type==TEXT]
@@ -472,7 +474,11 @@ class InlineController:
         self.last_valid_text=self.editor.toPlainText()
         self.last_valid_face=self.fonts.currentData();self.last_valid_size=self.size.value()
         if self.window.canvas.outline and not self.source_rect().isNull():
-            self.window.canvas.outline.setRect(self.source_rect().adjusted(-2,-2,2,2))
+            bounds = self.session.get('box_bounds')
+            rect = self.source_rect()
+            if bounds:
+                rect = rect.united(self.window.canvas.object_rect(bounds))
+            self.window.canvas.outline.setRect(rect.adjusted(-2,-2,2,2))
         self.reset_caret()
 
     def source_cursor_points(self):
@@ -499,6 +505,8 @@ class InlineController:
             point=QPointF(*self.window.canvas.to_scene(*self.session['end_origin']))
             h=self.size.value()*self.window.zoom
             rect=rect.united(QRectF(point.x(),point.y()-h,max(8,h*.5),h+2))
+        if self.session.get('box_bounds'):
+            rect=rect.united(self.window.canvas.object_rect(self.session['box_bounds']))
         return rect
 
     def source_contains(self,position):
@@ -639,8 +647,8 @@ class InlineController:
             self.status.setText('La fuente original no está disponible. Elige una alternativa o importa el TTF para aplicar.')
             return False
         try:
-            if self.session.get('layout') or self.fonts.currentData() or '\n' in value or abs(self.size.value()-self.session['start_size'])>=.01:
-                key=self.window.model.apply_text_layout(self.session['indices'],value,self.raw_size(),self.fonts.currentData(),self.session['color'],self.session.get('new_layout_id'))
+            if self.session.get('box_bounds') or self.session.get('layout') or self.fonts.currentData() or '\n' in value or abs(self.size.value()-self.session['start_size'])>=.01:
+                key=self.window.model.apply_text_layout(self.session['indices'],value,self.raw_size(),self.fonts.currentData(),self.session['color'],self.session.get('new_layout_id'),self.session.get('box_bounds'))
                 run=next((r for r in self.window.model.text_runs() if r.get('layout')==key),None)
                 self.window.last_text_selection=run['indices'][0] if run else None
             elif len(self.session['indices'])>1 and self.fonts.currentData() is None:
@@ -660,7 +668,10 @@ class InlineController:
             matches=self.catalog.matching(info['font'],'bold' in info['font'].lower() or info.get('weight',400)>=600,info.get('italic',False))
             if matches and not matches[0].restricted:default_face=matches[0].path
         self.window.text_defaults={'size':self.size.value(),'face':default_face}
-        if not (self.session.get('layout') or self.fonts.currentData() or '\n' in value or abs(self.size.value()-self.session['start_size'])>=.01):
+        if self.session.get('newly_created') and len(self.window.model.undo_stack)>=2:
+            original=self.window.model.undo_stack[-2]
+            self.window.model.undo_stack[-2:]=[('Añadir texto',original[1],original[2])]
+        if not (self.session.get('box_bounds') or self.session.get('layout') or self.fonts.currentData() or '\n' in value or abs(self.size.value()-self.session['start_size'])>=.01):
             self.window.last_text_selection=self.session['index']
         self._clear()
         self.window.render_page()
@@ -674,6 +685,7 @@ class InlineController:
         self.session = None
         self.busy = False
         self.panel.hide()
+        self.window.text_format.hide()
         self.status.setStyleSheet('')
         self.window.set_edit_shortcuts(True)
         self.window.move_group.show()

@@ -1,5 +1,18 @@
 # Cambios
 
+## 1.1.0 — Vista continua y cuadros de texto
+
+- Vista vertical continua con páginas de distintos tamaños y carga de vistas
+  previas según se necesitan; opción para volver a la vista de una sola página.
+- Creación de cuadros de texto arrastrando sobre la hoja, con fuente y tamaño
+  en una barra compacta separada, sin abrir automáticamente las propiedades.
+- Ajuste del texto nuevo al ancho del cuadro usando las métricas de su fuente.
+  Los cuadros conservan su contenido y formato al guardar, mover y reabrir.
+- Deshacer una inserción retira todo el cuadro, incluido el marcador inicial.
+- Pruebas de interacción en varias páginas y comparación de píxeles para comprobar
+  que las páginas ajenas a la edición no cambian.
+- Solicitud a SignPath Foundation enviada, pendiente de evaluación.
+
 ## 1.0.2 — Primera versión pública preliminar
 
 - Código fuente y scripts de compilación preparados para GitHub.

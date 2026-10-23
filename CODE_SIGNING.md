@@ -2,10 +2,10 @@
 
 ## Estado actual
 
-La versión pública inicial no tiene firma Authenticode. El autor está
-preparando la evaluación de opciones para proyectos de código abierto,
-incluida SignPath Foundation. **No hay una aprobación ni un certificado
-concedido actualmente.**
+Los paquetes publicados todavía no tienen firma Authenticode. El 23 de
+octubre de 2026 se envió la solicitud al programa de SignPath Foundation
+para proyectos de código abierto. **La solicitud está pendiente de evaluación;
+no hay una aprobación ni un certificado concedido actualmente.**
 
 El código abierto y las sumas SHA-256 permiten inspeccionar y comparar
 los archivos, pero no equivalen a una firma reconocida por Windows.

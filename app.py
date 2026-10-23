@@ -19,9 +19,10 @@ from PySide6.QtWidgets import (
 
 from engine import Document, TEXT, IMAGE, pdf
 from inline_edit import InlineController
+from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.0.2'
+VERSION = '1.1.0'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -145,6 +146,9 @@ class Canvas(QGraphicsView):
         self.text_boxes = []
         self.page_item = None
         self.page_width = self.page_height = 1
+        self.box_start = None
+        self.box_draft = None
+        self.pan_start = None
         self.setAcceptDrops(True)
         self.setMouseTracking(True)
 
@@ -159,6 +163,15 @@ class Canvas(QGraphicsView):
         self.page_width, self.page_height = image.width(), image.height()
         self._axes=None
         self.refresh_text_boxes()
+
+    def dragging(self):
+        return any(value is not None for value in
+                   (self.drag_start, self.resize_start, self.text_drag_start,
+                    self.box_start, self.pan_start)) or self.text_selecting
+
+    def bounded_position(self, point):
+        return QPointF(max(0, min(self.page_width, point.x())),
+                       max(0, min(self.page_height, point.y())))
 
     def to_page(self, point):
         origin,dx,dy = self.page_axes()
@@ -278,6 +291,11 @@ class Canvas(QGraphicsView):
     def mousePressEvent(self, event):
         owner = self.owner
         pos = self.mapToScene(event.position().toPoint())
+        if owner.model and owner.mode == 'read' and event.button() == Qt.MouseButton.LeftButton:
+            self.pan_start = (event.globalPosition(), owner.document_view.verticalScrollBar().value(),
+                              owner.document_view.horizontalScrollBar().value())
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
+            event.accept(); return
         if owner.mode=='text' and event.button()==Qt.MouseButton.LeftButton and self.text_grip and self.text_grip.rect().adjusted(-3,-3,3,3).contains(pos):
             index=owner.selected
             if owner.inline.active:
@@ -314,8 +332,12 @@ class Canvas(QGraphicsView):
             return super().mousePressEvent(event)
         px, py = self.to_page(pos)
         if owner.mode == 'add':
-            owner.add_text(px, py)
-            return
+            if 0 <= pos.x() <= self.page_width and 0 <= pos.y() <= self.page_height:
+                self.box_start = self.bounded_position(pos)
+                self.box_draft = self.scene().addRect(QRectF(pos,pos),
+                    QPen(QColor('#087f7b'), 1.5, Qt.PenStyle.DashLine), QColor(8,127,123,20))
+                self.box_draft.setZValue(25)
+            event.accept(); return
         if owner.mode=='imageadd':
             owner.place_image(px,py)
             return
@@ -334,6 +356,16 @@ class Canvas(QGraphicsView):
         event.accept()
 
     def mouseMoveEvent(self, event):
+        if self.pan_start:
+            start, vertical, horizontal = self.pan_start
+            delta = event.globalPosition()-start
+            self.owner.document_view.verticalScrollBar().setValue(vertical-round(delta.y()))
+            self.owner.document_view.horizontalScrollBar().setValue(horizontal-round(delta.x()))
+            event.accept(); return
+        if self.box_start is not None:
+            self.box_draft.setRect(QRectF(self.box_start,
+                self.bounded_position(self.mapToScene(event.position().toPoint()))).normalized())
+            event.accept(); return
         if self.text_drag_start and self.outline:
             delta=self.mapToScene(event.position().toPoint())-self.text_drag_start[0]
             self.outline.setPos(delta)
@@ -367,6 +399,21 @@ class Canvas(QGraphicsView):
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        if self.pan_start:
+            self.pan_start = None
+            self.setCursor(Qt.CursorShape.OpenHandCursor)
+            event.accept(); return
+        if self.box_start is not None:
+            rect = QRectF(self.box_start,self.bounded_position(self.mapToScene(event.position().toPoint()))).normalized()
+            if rect.width() < 12 or rect.height() < 12:
+                rect = QRectF(self.box_start.x(),self.box_start.y(),220*self.owner.zoom,65*self.owner.zoom).intersected(QRectF(0,0,self.page_width,self.page_height))
+            self.scene().removeItem(self.box_draft)
+            self.box_draft = self.box_start = None
+            corners = [self.to_page(point) for point in (rect.topLeft(), rect.bottomRight())]
+            xs,ys = zip(*corners)
+            bounds = (min(xs),min(ys),max(xs),max(ys))
+            self.owner.add_text(bounds[0],bounds[3],bounds)
+            event.accept(); return
         if self.text_drag_start:
             start,index=self.text_drag_start;self.text_drag_start=None
             a=self.to_page(start);b=self.to_page(self.mapToScene(event.position().toPoint()))
@@ -442,7 +489,7 @@ class Canvas(QGraphicsView):
             self.owner.change_zoom(1.15 if event.angleDelta().y() > 0 else 1/1.15)
             event.accept()
         else:
-            super().wheelEvent(event)
+            event.ignore()  # The document scroll area owns page scrolling.
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -545,6 +592,10 @@ class Window(QMainWindow):
         self.view_menu.addAction('Opciones de la selección…', self.show_properties)
         self.view_menu.addAction('Fuentes del documento…', self.font_report)
         self.view_menu.addSeparator()
+        self.continuous_action = self.view_menu.addAction('Desplazamiento vertical continuo')
+        self.continuous_action.setCheckable(True)
+        self.continuous_action.setChecked(True)
+        self.continuous_action.toggled.connect(self.set_continuous)
         self.view_menu.addAction('Ajustar al ancho', self.fit_width)
         self.view_menu.addAction('Tamaño 100 %', self.actual_size)
         bar.addStretch()
@@ -578,7 +629,8 @@ class Window(QMainWindow):
         self.notice.hide()
         stack.addWidget(self.notice)
         self.canvas = Canvas(self)
-        stack.addWidget(self.canvas, 1)
+        self.document_view = DocumentView(self)
+        stack.addWidget(self.document_view, 1)
         self.pages_dialog = QDialog(self, Qt.WindowType.Tool)
         self.pages_dialog.setWindowTitle('Páginas')
         self.pages_dialog.resize(190, 520)
@@ -613,6 +665,22 @@ class Window(QMainWindow):
         right.addSpacing(14)
         self.edit_button = self.button(right, 'Editar texto', self.edit_selected, primary=True)
         self.inline = InlineController(self, right)
+        self.text_format = QWidget()
+        format_layout = QHBoxLayout(self.text_format)
+        format_layout.setContentsMargins(12,3,12,3)
+        format_layout.addWidget(QLabel('Formato de texto'))
+        self.inline.fonts.setMinimumWidth(240)
+        self.inline.fonts.setMaximumWidth(420)
+        self.inline.size.setMaximumWidth(110)
+        format_layout.addWidget(self.inline.fonts)
+        format_layout.addWidget(self.inline.size)
+        format_options = QToolButton()
+        format_options.setText('Más opciones…')
+        format_options.clicked.connect(self.show_properties)
+        format_layout.addWidget(format_options)
+        format_layout.addStretch()
+        stack.insertWidget(1,self.text_format)
+        self.text_format.hide()
         self.delete_button = self.button(right, 'Borrar objeto', self.delete_selected)
         self.delete_button.setObjectName('danger')
         right.addSpacing(18)
@@ -779,7 +847,18 @@ class Window(QMainWindow):
         self.set_mode('read')
         self.render_page()
 
-    def navigate(self, index):
+    def set_continuous(self, enabled):
+        if self.inline.active and not self.inline.commit():
+            self.continuous_action.blockSignals(True)
+            self.continuous_action.setChecked(self.document_view.continuous)
+            self.continuous_action.blockSignals(False)
+            return
+        self.document_view.continuous = enabled
+        if self.model:
+            self.render_page()
+            self.document_view.scroll_to_page(self.model.index)
+
+    def navigate(self, index, scroll=True):
         if self.model and index >= 0:
             if self.inline.active and not self.inline.commit():
                 self.pages.blockSignals(True)
@@ -793,6 +872,8 @@ class Window(QMainWindow):
             self.model.set_page(index)
             self.selected = None
             self.render_page()
+            if scroll:
+                self.document_view.scroll_to_page(index)
 
     def render_page(self):
         if not self.model:
@@ -809,8 +890,10 @@ class Window(QMainWindow):
                 page.close();item.setSizeHint(QSize(140,175));self.pages.addItem(item)
             self.pages.setCurrentRow(self.model.index);self.pages.blockSignals(False)
         if self.fit:
-            self.zoom = max(.2, min(3, (self.canvas.viewport().width()-70)/self.model.page.get_width()))
+            width = max(w for w,h in self.document_view.dimensions()) if self.document_view.continuous else self.model.page.get_width()
+            self.zoom = max(.2, min(3, (self.document_view.viewport().width()-126)/width))
         self.canvas.display(pixmap(self.model.page, self.zoom))
+        self.document_view.sync()
         self.zoom_label.setText(f'{self.zoom*100:.0f}%')
         self.selected = None
         self.refresh_controls()
@@ -821,6 +904,9 @@ class Window(QMainWindow):
         self.page_number.setRange(1, len(self.model.doc))
         self.page_number.setValue(self.model.index+1)
         self.page_number.blockSignals(False)
+        self.pages.blockSignals(True)
+        self.pages.setCurrentRow(self.model.index)
+        self.pages.blockSignals(False)
         self.page_status.setText(f'Página {self.model.index+1} de {len(self.model.doc)}   ·   {len(self.model.objects)} objetos')
 
     def refresh_controls(self):
@@ -854,6 +940,8 @@ class Window(QMainWindow):
         self.canvas.setCursor(Qt.CursorShape.CrossCursor if mode == 'add' else Qt.CursorShape.ArrowCursor)
         self.select(None)
         self.canvas.refresh_text_boxes()
+        if mode == 'add':
+            self.statusBar().showMessage('Arrastra un cuadro en la hoja y escribe dentro. Fuente y tamaño aparecen en la barra de formato.',15000)
 
     def select(self, index):
         if self.canvas.text_grip:
@@ -903,7 +991,7 @@ class Window(QMainWindow):
         if hasattr(self, 'shortcut_actions'):
             self.shortcut_actions['Delete'].setEnabled(enabled)
 
-    def add_text(self, x, y):
+    def add_text(self, x, y, box=None):
         if not self.model:return
         defaults=getattr(self,'text_defaults',{'size':12,'face':None})
         try:self.model.add_text('Texto',x,y,defaults['size'])
@@ -913,10 +1001,11 @@ class Window(QMainWindow):
         self.select(index);self.inline.begin(index)
         if not self.inline.active:return
         self.inline.session['newly_created']=True
+        self.inline.session['box_bounds']=box or (x,y-65,min(self.model.page.get_width(),x+220),y)
         if defaults.get('face'):
             choice=self.inline.fonts.findData(defaults['face'])
             if choice>=0:self.inline.fonts.setCurrentIndex(choice)
-        self.inline.select_all();self.show_properties();self.focus_editor()
+        self.inline.select_all();self.inline.refresh_preview();self.focus_editor()
         self.statusBar().showMessage('Escribe directamente. Enter añade líneas; ajusta fuente y tamaño en las opciones. Arrastra el tirador para mover el cuadro.',15000)
 
     def choose_image(self):
