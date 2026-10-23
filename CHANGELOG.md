@@ -1,5 +1,14 @@
 # Cambios
 
+## 1.1.1 — Navegación continua estable
+
+- El indicador de página sigue la hoja que contiene el centro visible del
+  documento, sin adelantarse mientras se recorre la mitad inferior de la anterior.
+- El ajuste inicial reserva el espacio de la barra de scroll y conserva el zoom
+  al pasar de una página a otra.
+- La validación espera a que se complete la activación de la página, en lugar
+  de suponer un tiempo fijo de 90 ms.
+
 ## 1.1.0 — Vista continua y cuadros de texto
 
 - Vista vertical continua con páginas de distintos tamaños y carga de vistas

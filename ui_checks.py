@@ -35,6 +35,13 @@ def check_document_view(window, app, work):
         page=window.model.doc[i];bitmap=page.render(scale=1)
         before.append(hashlib.sha256(bytes(bitmap.buffer)).hexdigest())
         bitmap.close();page.close()
+    view.verticalScrollBar().setValue(round(view.slots[0].y()+view.slots[0].height()-view.viewport().height()*.75))
+    deadline=time.monotonic()+5
+    while view.timer.isActive():
+        assert time.monotonic()<deadline, 'The continuous view did not settle.'
+        QTest.qWait(25)
+    assert window.model.index==0, 'Page indicator advanced before the viewport center reached the next page.'
+    checks['page_indicator_matches_viewport_center']=True
     view.scroll_to_page(1)
     # Initial layout and scrollbar geometry may settle after several event-loop
     # turns on Windows. Wait for the observable state instead of assuming 90 ms.

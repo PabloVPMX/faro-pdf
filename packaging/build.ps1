@@ -37,5 +37,5 @@ if (-not (Test-Path -LiteralPath $compiler)) {
 & $compiler (Join-Path $PSScriptRoot 'installer.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Fallo compilacion del instalador.' }
 & (Join-Path $PSScriptRoot 'validate_installer.ps1')
-Compress-Archive -Path dist\FaroPDF\* -DestinationPath release\FaroPDF-1.1.0-Portable.zip -Force
+Compress-Archive -Path dist\FaroPDF\* -DestinationPath release\FaroPDF-1.1.1-Portable.zip -Force
 Invoke-Python -PythonArguments @('packaging\release_manifest.py')

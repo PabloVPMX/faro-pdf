@@ -57,6 +57,9 @@ class DocumentView(QScrollArea):
         self.active_index = None
         self.syncing = False
         self.setWidgetResizable(True)
+        # Reserve the scrollbar width before fitting the first page. Otherwise
+        # its later appearance changes the zoom on the first page transition.
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.setFrameShape(QScrollArea.Shape.NoFrame)
         self.setStyleSheet('QScrollArea, #documentPages { background:#e2e8ee; border:0; }')
         self.content = QWidget()
@@ -162,9 +165,10 @@ class DocumentView(QScrollArea):
                 slot.preview_version = None
         # Changing pages must never commit an unfinished edit merely by scrolling.
         if self.continuous and not self.owner.inline.active and not self.owner.canvas.dragging():
+            center=top+self.viewport().height()/2
             target = min(range(len(self.slots)), key=lambda i:
-                         abs(self.slots[i].y()+min(self.slots[i].height()/2, self.viewport().height()/2)-
-                             (top+self.viewport().height()/2)))
+                         max(self.slots[i].y()-center, 0,
+                             center-self.slots[i].y()-self.slots[i].height()))
             if target != model.index:
                 self.activate(target)
 

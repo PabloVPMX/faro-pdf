@@ -9,7 +9,7 @@ import traceback
 def run(report_path):
     report_path = Path(report_path).resolve()
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    results = {'version': '1.1.0', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
+    results = {'version': '1.1.1', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
     checks = results['checks']
     window = None
     try:

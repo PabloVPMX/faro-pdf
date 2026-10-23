@@ -16,8 +16,8 @@ La interfaz actual está en español.
 
 Para **Windows 10/11 de 64 bits**:
 
-- [Descargar instalador de Faro PDF 1.1.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.1.0/FaroPDF-1.1.0-Instalar.exe)
-- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.1.0/FaroPDF-1.1.0-Portable.zip)
+- [Descargar instalador de Faro PDF 1.1.1](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.1.1/FaroPDF-1.1.1-Instalar.exe)
+- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.1.1/FaroPDF-1.1.1-Portable.zip)
 - [Ver todas las versiones y notas](https://github.com/PabloVPMX/faro-pdf/releases)
 
 El instalador incluye Python, Qt y PDFium; no hace falta instalarlos por

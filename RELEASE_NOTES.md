@@ -1,9 +1,11 @@
-**Faro PDF 1.1.0** añade vista vertical continua y cuadros de texto dentro del documento. Es un lector y editor gratuito y de código abierto para Windows.
+**Faro PDF 1.1.1** añade vista vertical continua y cuadros de texto dentro del documento. Es un lector y editor gratuito y de código abierto para Windows.
+
+Esta revisión corrige el indicador de página durante el scroll y evita que el zoom inicial cambie al pasar a otra hoja.
 
 ### Descargar
 
-- **FaroPDF-1.1.0-Instalar.exe**: instalación por usuario, accesos directos y registro en «Abrir con». Incluye sus dependencias; no hace falta instalar Python.
-- **FaroPDF-1.1.0-Portable.zip**: extrae la carpeta completa y abre `FaroPDF.exe`. Conserva `_internal` junto al ejecutable.
+- **FaroPDF-1.1.1-Instalar.exe**: instalación por usuario, accesos directos y registro en «Abrir con». Incluye sus dependencias; no hace falta instalar Python.
+- **FaroPDF-1.1.1-Portable.zip**: extrae la carpeta completa y abre `FaroPDF.exe`. Conserva `_internal` junto al ejecutable.
 - **SHA256SUMS.txt**: sumas para comprobar la integridad de las descargas.
 - **verification.json**: resultado de las comprobaciones automatizadas.
 
