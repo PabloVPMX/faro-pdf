@@ -16,8 +16,8 @@ La interfaz actual está en español.
 
 Para **Windows 10/11 de 64 bits**:
 
-- [Descargar instalador de Faro PDF 1.3.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.3.0/FaroPDF-1.3.0-Instalar.exe)
-- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.3.0/FaroPDF-1.3.0-Portable.zip)
+- [Descargar instalador de Faro PDF 1.3.1](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.3.1/FaroPDF-1.3.1-Instalar.exe)
+- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.3.1/FaroPDF-1.3.1-Portable.zip)
 - [Ver todas las versiones y notas](https://github.com/PabloVPMX/faro-pdf/releases)
 
 El instalador incluye Python, Qt y PDFium; no hace falta instalarlos por
@@ -64,6 +64,8 @@ desactivar el antivirus. Consulta nuestra [Code signing policy](CODE_SIGNING.md)
   cambio; elegir otra fuente es una acción explícita.
 - Dibujar cuadros de texto sobre la hoja, escribir dentro y ajustar su fuente
   y tamaño en una barra aparte. El texto nuevo se ajusta al ancho del cuadro.
+  Los cuadros añadidos usan sus propias fuentes aunque el texto original de esa
+  página tenga una codificación que impida editarlo de forma segura.
 - Mover los cuadros de texto y volver a editarlos después de guardar.
 - Insertar imágenes, moverlas, redimensionarlas desde sus bordes y borrarlas.
 - Combinar varios PDF al inicio, al final o en una posición intermedia.

@@ -2,7 +2,7 @@ from pathlib import Path
 import hashlib,json,zipfile
 
 root=Path(__file__).resolve().parents[1]
-version='1.3.0'
+version='1.3.1'
 release=root/'release'
 bundle=root/'dist/FaroPDF'
 with zipfile.ZipFile(release/f'FaroPDF-{version}-Portable.zip') as archive:

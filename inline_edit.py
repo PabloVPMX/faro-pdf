@@ -205,6 +205,7 @@ class InlineController:
             return
         self.session = dict(index=index, info=info, version=model.current_version,
                             page=model.index, click=click, indices=list(indices),layout=run.get('layout') if run else None,
+                            owned=bool(run and run.get('owned')),
                             end_origin=run.get('end_origin') if run else None)
         if run and run.get('box_bounds'):self.session['box_bounds']=run['box_bounds']
         self.panel.show()
@@ -237,7 +238,7 @@ class InlineController:
         self.session['start_face'] = None
         if self.session['original_available']:
             preflight = self.window.model.native_preflight.get(self.window.model.index, {})
-            if preflight.get('error'):
+            if preflight.get('error') and not self.session.get('owned'):
                 self.status.setText('La edición con la fuente original está bloqueada en esta página: '+preflight['error'])
             else:
                 self._show_caret()

@@ -1,5 +1,15 @@
 # Cambios
 
+## 1.3.1 — Añadir texto sin depender de las fuentes originales
+
+- Los cuadros nuevos usan contenido y fuentes independientes. Una fuente del
+  documento sin mapa ToUnicode ya no impide añadir y editar texto propio.
+- Los cuadros conservan acentos, saltos, tamaño, fuente y posición al guardar
+  y reabrir; se pueden mover y borrar sin regenerar los elementos originales.
+- Si el editor no puede iniciarse, la inserción se revierte sin dejar «Texto».
+- Se mantienen la validación de fuentes originales y los controles de píxeles
+  fuera del cuadro. Prueba de regresión con una fuente original sin ToUnicode.
+
 ## 1.3.0 — Impresión y búsqueda
 
 - Imprimir con Ctrl+P, diálogo de Windows, intervalos de páginas, página actual,

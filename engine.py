@@ -292,7 +292,7 @@ class Document:
             bounds=(min(bounds[0],end[0]),min(bounds[1],end[1]),max(bounds[2],end[0]+info['size']*scale*.4),max(bounds[3],end[1]+info['size']*scale*.8))
             box=tuple(map(float,record['meta']['/Box'])) if '/Box' in record['meta'] else None
             if box:bounds=(min(bounds[0],box[0]),min(bounds[1],box[1]),max(bounds[2],box[2]),max(bounds[3],box[3]))
-            runs.append(dict(indices=indices,characters=chars,bounds=bounds,baseline=info['matrix'][5],size=info['size']*scale,key=('Faro',key),layout=key,text=str(record['meta']['/Text']),end_origin=end,matrix=tuple(map(float,record['meta']['/Matrix'])),box_bounds=box))
+            runs.append(dict(indices=indices,characters=chars,bounds=bounds,baseline=info['matrix'][5],size=info['size']*scale,key=('Faro',key),layout=key,text=str(record['meta']['/Text']),end_origin=end,matrix=tuple(map(float,record['meta']['/Matrix'])),box_bounds=box,owned=record.get('owned',False)))
         self._text_runs = runs
         return runs
 
@@ -569,6 +569,10 @@ class Document:
 
     def delete(self, index):
         if self.objects[index].type==IMAGE:return self.transform_image(index,None)
+        if self.objects[index].type==TEXT:
+            run=self.text_run(index)
+            if run and run.get('owned'):
+                return self.apply_text_layout(run['indices'],'',run['size'],box=run.get('box_bounds'))
         def operation():
             obj = self.objects[index]
             if obj.type == TEXT:
@@ -686,11 +690,15 @@ class Document:
             self._insert_text(value, bounds[0], bounds[3], size, font, color)
         self._change('Reemplazar por texto', operation, value.splitlines()[0])
 
-    def add_text(self, value, x, top, size=12, font='Helvetica', color=(13, 43, 49)):
+    def add_text(self, value, x, top, size=12, font='Helvetica', color=(13, 43, 49), face=None, box=None):
         if not value.strip():
             raise ValueError('Escribe un texto.')
-        from insertions import add_text
-        self.install_bytes('Añadir texto',add_text(self._data,self.index,value,x,top,size,font,color))
+        from owned_text import add
+        from text_layout import block_records
+        data,key=add(self._edit_data,self.index,value,x,top,size,font,color,face,box)
+        record=block_records(data,self.index)[key]
+        self._apply_native_bytes([],data,new_ordinals=record['ordinals'])
+        self.undo_stack[-1]=('Añadir texto',self.undo_stack[-1][1],self.undo_stack[-1][2])
 
     def install_bytes(self,label,data):
         before=self._data

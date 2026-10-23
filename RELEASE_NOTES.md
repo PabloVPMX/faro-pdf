@@ -1,4 +1,8 @@
-**Faro PDF 1.3.0** añade **impresión y búsqueda de texto**. Es un lector y editor gratuito y de código abierto para Windows.
+**Faro PDF 1.3.1** corrige el bloqueo al **añadir texto** en documentos cuyas fuentes originales no tienen un mapa ToUnicode verificable.
+
+Los cuadros nuevos usan sus propias fuentes y contenido independiente: puedes escribir acentos y saltos de línea, cambiar formato, moverlos y volver a editarlos al guardar y reabrir. Las fuentes y los elementos originales permanecen intactos. Si no se puede iniciar el editor, se revierte la inserción sin dejar un marcador «Texto».
+
+Se mantienen las funciones de impresión, búsqueda, imágenes, organización de páginas y actualizaciones de la versión anterior.
 
 **Ctrl+P / Archivo → Imprimir** abre el diálogo de Windows para elegir impresora y páginas. **Archivo → Vista previa de impresión** permite revisar la salida. Se imprime la edición actual, ajustada al papel y conservando las proporciones, con renderizado de hasta 300 ppp.
 
@@ -12,8 +16,8 @@ Se comprueban el informe de publicación, el tamaño y las sumas SHA-256 de GitH
 
 ### Descargar
 
-- **FaroPDF-1.3.0-Instalar.exe**: instalación por usuario, accesos directos y registro en «Abrir con». Incluye sus dependencias; no hace falta instalar Python.
-- **FaroPDF-1.3.0-Portable.zip**: extrae la carpeta completa y abre `FaroPDF.exe`. Conserva `_internal` junto al ejecutable.
+- **FaroPDF-1.3.1-Instalar.exe**: instalación por usuario, accesos directos y registro en «Abrir con». Incluye sus dependencias; no hace falta instalar Python.
+- **FaroPDF-1.3.1-Portable.zip**: extrae la carpeta completa y abre `FaroPDF.exe`. Conserva `_internal` junto al ejecutable.
 - **SHA256SUMS.txt**: sumas para comprobar la integridad de las descargas.
 - **verification.json**: resultado de las comprobaciones automatizadas.
 

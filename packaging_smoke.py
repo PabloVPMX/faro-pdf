@@ -9,7 +9,7 @@ import traceback
 def run(report_path):
     report_path = Path(report_path).resolve()
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    results = {'version': '1.3.0', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
+    results = {'version': '1.3.1', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
     checks = results['checks']
     window = None
     try:
@@ -43,6 +43,9 @@ def run(report_path):
         app.setFont(QFont('Segoe UI', 10))
         app.setStyle('Fusion'); app.setStyleSheet(STYLE)
         window = Window(updates_enabled=False); window.resize(1280, 850); window.show()
+        def diagnostic_error(error):
+            raise AssertionError(str(error))
+        window.error = diagnostic_error
         window.open_file(str(source)); app.processEvents()
         assert window.model and window.model.text_runs()
         checks['open_render_native_text'] = True
@@ -83,6 +86,8 @@ def run(report_path):
         checks.update(check_updates(window, app, work))
         from reader_checks import check_reader
         checks.update(check_reader(window, app, work))
+        from owned_text_checks import check_owned_text
+        checks.update(check_owned_text(window, app, work))
         window.render_page(); app.processEvents()
         window.grab().save(str(report_path.with_suffix('.png')))
         results['passed'] = True
@@ -91,6 +96,8 @@ def run(report_path):
         results['error'] = traceback.format_exc()
     finally:
         if window:
+            # Diagnostic fixtures must never start an installer, even on failure.
+            window.updates.ready = window.updates.force_install = False
             window.inline.cancel()
             if window.model:
                 window.model.saved_version = window.model.current_version

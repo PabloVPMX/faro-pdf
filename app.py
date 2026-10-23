@@ -22,7 +22,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.3.0'
+VERSION = '1.3.1'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -1016,15 +1016,20 @@ class Window(QMainWindow):
 
     def add_text(self, x, y, box=None):
         if not self.model:return
+        if self.inline.busy or (self.inline.active and not self.inline.commit()):return
         defaults=getattr(self,'text_defaults',{'size':12,'face':None})
-        try:self.model.add_text('Texto',x,y,defaults['size'])
+        box=box or (x,y-65,min(self.model.page.get_width(),x+220),y)
+        try:self.model.add_text('Texto',x,y,defaults['size'],face=defaults.get('face'),box=box)
         except Exception as error:self.error(error);return
         self.render_page();self.set_mode('text')
         index=max(i for i,o in enumerate(self.model.objects) if o.type==TEXT)
         self.select(index);self.inline.begin(index)
-        if not self.inline.active:return
+        if not self.inline.active:
+            self.inline.cancel();self.model.undo();self.render_page()
+            self.statusBar().showMessage('No se pudo iniciar el cuadro de texto. El documento conserva su estado anterior.',12000)
+            return
         self.inline.session['newly_created']=True
-        self.inline.session['box_bounds']=box or (x,y-65,min(self.model.page.get_width(),x+220),y)
+        self.inline.session['box_bounds']=box
         if defaults.get('face'):
             choice=self.inline.fonts.findData(defaults['face'])
             if choice>=0:self.inline.fonts.setCurrentIndex(choice)

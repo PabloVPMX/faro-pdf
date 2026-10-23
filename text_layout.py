@@ -12,26 +12,27 @@ def num(v):return format(float(v),'.10f').rstrip('0').rstrip('.') or '0'
 
 @lru_cache(maxsize=8)
 def block_records(data,page):
-    reader,raw,_,shows,_,_=_prepare(data,page)
-    byop={show.operation:i for i,show in enumerate(shows)};stack=[];groups={}
-    for index,op in enumerate(_operations(raw)):
-        if op.operator in (b'BMC',b'BDC'):
-            stack.append(str(op.operands[0]))
-            if stack[-1].startswith('/FaroBlock'):groups.setdefault(stack[-1],[])
-        elif op.operator==b'EMC':
-            if stack:stack.pop()
-        if index in byop:
-            tag=next((s for s in reversed(stack) if s.startswith('/FaroBlock')),None)
-            if tag:groups.setdefault(tag,[]).append(byop[index])
-    metadata=reader.pages[page].get('/FaroTextData',{})
-    return {key:dict(ordinals=indices,meta=metadata[key].get_object()) for key,indices in groups.items() if key in metadata}
+    from owned_text import records
+    return records(data,page)
 
 def add_font(w,page,path):
     from typography import read_face
     face=read_face(path)
     if face.restricted:raise ValueError('Esta fuente no permite incrustación.')
-    data=Path(path).read_bytes();key=NameObject('/FaroFont'+hashlib.sha256(data).hexdigest()[:12]);fonts=resource(page,'/Font')
-    if key in fonts:return key
+    data=Path(path).read_bytes();base='/FaroFont'+hashlib.sha256(data).hexdigest()[:12];key=NameObject(base);fonts=resource(page,'/Font')
+    with TTFont(io.BytesIO(data),lazy=True) as expected:
+        wanted={chr(u) for u,n in expected.getBestCmap().items() if u<=65535 and chr(u).isprintable() and expected.getGlyphID(n)>0}
+    suffix=0
+    while key in fonts:
+        try:
+            current=fonts[key].get_object();validated=_Font(current)
+            descendant=current['/DescendantFonts'][0].get_object()
+            if (wanted.issubset(validated.reverse) and
+                    descendant['/FontDescriptor']['/FontFile2'].get_data()==data):return key
+        except (ValueError,KeyError,TypeError):pass
+        # A resource with the same name can be an original font with a missing
+        # or incomplete Unicode map. Never overwrite or adopt that resource.
+        suffix+=1;key=NameObject(base+'_'+str(suffix))
     with TTFont(io.BytesIO(data)) as font:
         cmap={u:font.getGlyphID(n) for u,n in font.getBestCmap().items() if u<=65535 and chr(u).isprintable() and font.getGlyphID(n)>0}
         units=font['head'].unitsPerEm;order=font.getGlyphOrder()
@@ -82,6 +83,9 @@ def replace_block(data,page_index,ordinals,expected,value,size,matrix,color,face
     value=value.replace('\r\n','\n').replace('\r','\n')
     if any(not c.isprintable() and c!='\n' for c in value):raise ValueError('El bloque contiene caracteres de control no admitidos.')
     own=block_records(data,page_index);existing=next((key for key,r in own.items() if r['ordinals']==ordinals),None)
+    if existing and own[existing].get('owned'):
+        from owned_text import replace
+        return replace(data,page_index,existing,value,size,face,color,box)
     if existing:
         if not face and ordinals:
             from font_extension import extend_for_text
@@ -163,6 +167,10 @@ def block_geometry(model,textpage,objects,record):
 
 def move_text(data,page,ordinals,dx,dy):
     from insertions import compose
+    for key,record in block_records(data,page).items():
+        if record['ordinals']==ordinals and record.get('owned'):
+            from owned_text import move
+            return move(data,page,key,dx,dy)
     if ordinals!=list(range(ordinals[0],ordinals[-1]+1)):raise ValueError('Los fragmentos del cuadro no son contiguos.')
     _,raw,_,shows,_,_=_prepare(data,page);ops=_operations(raw)
     first,last=shows[ordinals[0]].operation,shows[ordinals[-1]].operation
