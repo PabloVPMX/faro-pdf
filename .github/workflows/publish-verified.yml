@@ -1,0 +1,92 @@
+name: Publish verified Windows release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Windows build run ID
+        required: true
+        type: string
+      expected_sha:
+        description: Exact source commit verified by that run
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VERIFIED_RUN_ID: ${{ inputs.run_id }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Check build identity and conclusion
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,string
+          assert os.environ['VERIFIED_RUN_ID'].isdecimal()
+          sha=os.environ['EXPECTED_SHA']
+          assert len(sha)==40 and set(sha)<=set(string.hexdigits)
+          PY
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VERIFIED_RUN_ID" > verified-run.json
+          python - <<'PY'
+          import os,json
+          run=json.load(open('verified-run.json'))
+          assert run['conclusion']=='success'
+          assert run['head_sha']==os.environ['EXPECTED_SHA']
+          assert run['head_repository']['full_name']==os.environ['GITHUB_REPOSITORY']
+          assert run['name']=='Build and verify Windows'
+          PY
+      - name: Download only the verified release artifact
+        run: gh run download "$VERIFIED_RUN_ID" --repo "$GITHUB_REPOSITORY" --name FaroPDF-Windows-verified --dir release
+      - name: Verify manifests, hashes and archive before publication
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,zipfile
+          release=pathlib.Path('release')
+          report=json.loads((release/'verification.json').read_text(encoding='utf8'))
+          assert report['version']=='1.0.2'
+          assert report['unsigned'] is True
+          assert report['private_documents_included'] is False
+          assert report['portable_integrity_verified'] is True
+          for name in ('source','frozen','native','installer'):
+              assert report['checks'][name]['passed'],name
+          expected={'FaroPDF-1.0.2-Instalar.exe','FaroPDF-1.0.2-Portable.zip','SHA256SUMS.txt','verification.json'}
+          assert {p.name for p in release.iterdir()}==expected
+          for artifact in report['artifacts']:
+              path=release/artifact['file']
+              assert path.name in expected and path.parent==release
+              assert path.stat().st_size==artifact['bytes']
+              assert hashlib.sha256(path.read_bytes()).hexdigest()==artifact['sha256']
+          with zipfile.ZipFile(release/'FaroPDF-1.0.2-Portable.zip') as archive:
+              assert archive.testzip() is None
+              assert not any(n.lower().endswith(('.pdf','.pfx','.p12','.key','.pem')) for n in archive.namelist())
+          PY
+          (cd release && sha256sum --check SHA256SUMS.txt)
+      - name: Publish preliminary release and downloadable packages
+        shell: bash
+        run: |
+          gh release create v1.0.2 release/FaroPDF-1.0.2-Instalar.exe release/FaroPDF-1.0.2-Portable.zip release/SHA256SUMS.txt release/verification.json \
+            --repo "$GITHUB_REPOSITORY" --target "$EXPECTED_SHA" \
+            --title 'Faro PDF 1.0.2 — Primera versión pública preliminar' \
+            --notes-file RELEASE_NOTES.md --prerelease
+          gh release view v1.0.2 --repo "$GITHUB_REPOSITORY" --json url,isDraft,isPrerelease,assets
+      - name: Check public download availability
+        shell: bash
+        run: |
+          curl --fail --head --location --retry 3 "https://github.com/$GITHUB_REPOSITORY/releases/download/v1.0.2/FaroPDF-1.0.2-Instalar.exe"
+          {
+            echo '## Faro PDF 1.0.2'
+            echo "[Public release](https://github.com/$GITHUB_REPOSITORY/releases/tag/v1.0.2)"
+            echo 'Initial preliminary release; binaries are not digitally signed yet.'
+          } >> "$GITHUB_STEP_SUMMARY"
