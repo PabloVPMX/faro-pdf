@@ -154,7 +154,10 @@ class DocumentView(QScrollArea):
             if near and slot.preview_version != model.current_version:
                 page = model.doc[i]
                 try:
-                    slot.preview.setPixmap(pixmap(page, self.owner.zoom))
+                    image = pixmap(page, self.owner.zoom)
+                    if hasattr(self.owner,'search'):
+                        image = self.owner.search.decorate_preview(image,page,i)
+                    slot.preview.setPixmap(image)
                     slot.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
                     slot.preview.setStyleSheet('background:#e2e8ee;')
                     slot.preview_version = model.current_version

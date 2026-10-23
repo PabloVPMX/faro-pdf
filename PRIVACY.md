@@ -4,6 +4,12 @@ Faro PDF procesa los documentos en el equipo del usuario. No incorpora
 cuentas de usuario, telemetría, publicidad ni servicios de análisis remoto.
 No envía automáticamente PDF, texto, imágenes ni fuentes a un servidor.
 
+La búsqueda de texto se ejecuta localmente. Imprimir entrega las páginas a la
+cola y al controlador de la impresora que elijas en el diálogo de Windows.
+Si eliges una impresora de red o un servicio de impresión externo, ese destino
+recibirá el contenido como parte del trabajo que hayas confirmado. Faro no
+imprime automáticamente ni añade los resaltados de búsqueda al documento.
+
 ## Actualizaciones
 
 Desde 1.2.0, Faro consulta la API pública de GitHub cada día mientras se utiliza

@@ -22,7 +22,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.2.0'
+VERSION = '1.3.0'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -153,6 +153,8 @@ class Canvas(QGraphicsView):
         self.setMouseTracking(True)
 
     def display(self, image):
+        if hasattr(self.owner, 'search'):
+            self.owner.search.before_canvas_clear()
         self.scene().clear()
         self.text_grip=None
         self.resize_handles=[]
@@ -545,6 +547,9 @@ class Window(QMainWindow):
             bar.addWidget(b)
         self.file_menu.addAction('Abrir PDF…\tCtrl+O', self.open_dialog)
         self.menu_save = self.file_menu.addAction('Guardar copia…\tCtrl+Mayús+S', self.save_as)
+        self.menu_print = self.file_menu.addAction('Imprimir…\tCtrl+P', lambda:self.printing.print_dialog())
+        self.menu_preview = self.file_menu.addAction('Vista previa de impresión…', lambda:self.printing.preview())
+        self.menu_find = self.file_menu.addAction('Buscar en el documento…\tCtrl+F', lambda:self.search.show())
         self.file_menu.addSeparator()
         self.file_menu.addAction('Actualizaciones…', lambda: self.updates.show_dialog())
         self.file_menu.addAction('Cerrar ventana', self.close)
@@ -722,7 +727,7 @@ class Window(QMainWindow):
         self.statusBar().addPermanentWidget(self.page_status)
         self.statusBar().showMessage('Abre un PDF. Las opciones están en los menús y el clic derecho.')
         self.shortcut_actions = {}
-        for shortcut, callback in [('Ctrl+O', self.open_dialog), ('Ctrl+S', self.save), ('Ctrl+Shift+S', self.save_as), ('Ctrl+Z', self.undo), ('Ctrl+Shift+Z', self.redo), ('Delete', self.delete_selected)]:
+        for shortcut, callback in [('Ctrl+O', self.open_dialog), ('Ctrl+P', lambda:self.printing.print_dialog()), ('Ctrl+F', lambda:self.search.show()), ('F3', lambda:self.search.move(1)), ('Shift+F3', lambda:self.search.move(-1)), ('Ctrl+S', self.save), ('Ctrl+Shift+S', self.save_as), ('Ctrl+Z', self.undo), ('Ctrl+Shift+Z', self.redo), ('Delete', self.delete_selected)]:
             action = QAction(self)
             action.setShortcut(QKeySequence(shortcut))
             action.triggered.connect(callback)
@@ -732,6 +737,10 @@ class Window(QMainWindow):
 
         from updates import UpdateController
         self.updates = UpdateController(self, self.update_button, VERSION, enabled=updates_enabled)
+        from search import SearchController
+        from printing import PrintController
+        self.search = SearchController(self, stack)
+        self.printing = PrintController(self)
 
     def icon_button(self, layout, icon, tooltip, callback):
         b = QToolButton()
@@ -758,6 +767,9 @@ class Window(QMainWindow):
 
     def refresh_menus(self):
         self.menu_save.setEnabled(self.model is not None)
+        self.menu_print.setEnabled(self.model is not None)
+        self.menu_preview.setEnabled(self.model is not None)
+        self.menu_find.setEnabled(self.model is not None)
         self.menu_undo.setEnabled(self.undo_button.isEnabled())
         self.menu_redo.setEnabled(self.redo_button.isEnabled())
 
@@ -917,6 +929,8 @@ class Window(QMainWindow):
         self.pages.setCurrentRow(self.model.index)
         self.pages.blockSignals(False)
         self.page_status.setText(f'Página {self.model.index+1} de {len(self.model.doc)}   ·   {len(self.model.objects)} objetos')
+        if hasattr(self, 'search'):
+            self.search.document_changed()
 
     def refresh_controls(self):
         ready = self.model is not None
@@ -1150,6 +1164,9 @@ class Window(QMainWindow):
             QTimer.singleShot(0, self.render_page)
 
     def closeEvent(self, event):
+        if self.printing.busy:
+            event.ignore()
+            return
         if any(worker.isRunning() for worker in self.inline.workers):
             self.statusBar().showMessage('Espera a que termine el reconocimiento local antes de cerrar.', 8000)
             event.ignore()
@@ -1161,6 +1178,7 @@ class Window(QMainWindow):
             if not self.updates.before_close():
                 event.ignore()
                 return
+            self.search.stop()
             if self.model:
                 self.model.close()
             event.accept()

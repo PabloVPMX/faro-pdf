@@ -34,8 +34,8 @@ cachés quedan en `.cache/`, fuera del código publicado.
 
 Salida en `release/`:
 
-- `FaroPDF-1.2.0-Instalar.exe`
-- `FaroPDF-1.2.0-Portable.zip`
+- `FaroPDF-1.3.0-Instalar.exe`
+- `FaroPDF-1.3.0-Portable.zip`
 - `SHA256SUMS.txt`
 - Informes y ejemplo sintético de validación.
 

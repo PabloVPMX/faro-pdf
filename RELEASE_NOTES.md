@@ -1,6 +1,10 @@
-**Faro PDF 1.2.0** añade el botón **Actualizar** y actualizaciones automáticas. Es un lector y editor gratuito y de código abierto para Windows.
+**Faro PDF 1.3.0** añade **impresión y búsqueda de texto**. Es un lector y editor gratuito y de código abierto para Windows.
 
-La edición instalada busca versiones cada día mientras usas Faro, descarga las novedades en segundo plano y las instala al cerrar todas las ventanas. Puedes desactivar ambas opciones en **Actualizar** o **Archivo → Actualizaciones**. **Actualizar ahora** instala y vuelve a abrir Faro. Siempre se respeta el diálogo habitual de guardar cambios.
+**Ctrl+P / Archivo → Imprimir** abre el diálogo de Windows para elegir impresora y páginas. **Archivo → Vista previa de impresión** permite revisar la salida. Se imprime la edición actual, ajustada al papel y conservando las proporciones, con renderizado de hasta 300 ppp.
+
+**Ctrl+F / Archivo → Buscar en el documento** busca en todas las páginas y resalta las coincidencias. Usa Enter/F3 y Mayús+Enter/Mayús+F3 para avanzar y retroceder. Incluye filtros de mayúsculas y palabras completas, funciona con páginas giradas y recalcula los resultados al editar. Los resaltados no se guardan ni se imprimen; los escaneos sin texto requieren OCR.
+
+Si tienes **1.2.0**, puedes actualizar desde el botón **Actualizar**. Se conservan la búsqueda diaria, la descarga en segundo plano y la instalación al cerrar todas las ventanas, configurables desde ese cuadro.
 
 **Si ya tienes Faro 1.1.1 o anterior**, descarga únicamente el instalador nuevo y ejecútalo sobre la instalación existente. No hace falta desinstalar. Esta instalación inicial incorpora el actualizador para las versiones futuras. La edición portátil se actualiza descargando y extrayendo el ZIP completo.
 
@@ -8,8 +12,8 @@ Se comprueban el informe de publicación, el tamaño y las sumas SHA-256 de GitH
 
 ### Descargar
 
-- **FaroPDF-1.2.0-Instalar.exe**: instalación por usuario, accesos directos y registro en «Abrir con». Incluye sus dependencias; no hace falta instalar Python.
-- **FaroPDF-1.2.0-Portable.zip**: extrae la carpeta completa y abre `FaroPDF.exe`. Conserva `_internal` junto al ejecutable.
+- **FaroPDF-1.3.0-Instalar.exe**: instalación por usuario, accesos directos y registro en «Abrir con». Incluye sus dependencias; no hace falta instalar Python.
+- **FaroPDF-1.3.0-Portable.zip**: extrae la carpeta completa y abre `FaroPDF.exe`. Conserva `_internal` junto al ejecutable.
 - **SHA256SUMS.txt**: sumas para comprobar la integridad de las descargas.
 - **verification.json**: resultado de las comprobaciones automatizadas.
 
@@ -21,7 +25,7 @@ Desplázate por varias páginas con la rueda y dibuja cuadros de texto directame
 
 ### Estado y límites
 
-Es una publicación preliminar, con mejoras pendientes. Usa copias y revisa el resultado. No incluye OCR, impresión, búsqueda, firmas de documentos, PDF con contraseña ni ajuste automático de párrafos. El guardado incremental **no es una función de redacción segura** de información confidencial. Las estructuras complejas pueden rechazar una edición para conservar el contenido.
+Es una publicación preliminar, con mejoras pendientes. Usa copias y revisa el resultado. No incluye OCR, firmas de documentos, PDF con contraseña ni ajuste automático de párrafos. El guardado incremental **no es una función de redacción segura** de información confidencial. Las estructuras complejas pueden rechazar una edición para conservar el contenido.
 
 ### Code signing policy
 

@@ -1,5 +1,17 @@
 # Cambios
 
+## 1.3.0 — Impresión y búsqueda
+
+- Imprimir con Ctrl+P, diálogo de Windows, intervalos de páginas, página actual,
+  orden de impresión y ajuste al papel conservando proporciones.
+- Vista previa desde Archivo, renderizado de hasta 300 ppp y memoria acotada.
+- Buscar con Ctrl+F en todas las páginas, resultados resaltados y navegación
+  circular con Enter/F3 y Mayús+Enter/Mayús+F3; filtros de mayúsculas y palabras.
+- Búsqueda incremental sin ejecutar PDFium en varios hilos; resultados actualizados
+  después de editar y resaltados compatibles con zoom y páginas giradas.
+- Pruebas sintéticas de navegación y salida de impresión a archivo. Ninguna prueba
+  envía trabajos a impresoras físicas.
+
 ## 1.2.0 — Actualizaciones desde Faro
 
 - Botón Actualizar y menú Archivo → Actualizaciones, con búsqueda en segundo plano.

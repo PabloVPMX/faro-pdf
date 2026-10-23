@@ -8,7 +8,7 @@ Se usan distribuciones sin modificar de sus respectivos proyectos.
 | --- | --- | --- |
 | Python | 3.12 | [PSF y licencias incorporadas](https://docs.python.org/3/license.html) |
 | PySide6 Essentials y Shiboken6 | 6.12.0 | [LGPL-3.0 / GPL y componentes de Qt for Python](https://doc.qt.io/qtforpython-6/licenses.html) |
-| Qt Core, Gui, Widgets, Network, Svg y Test | 6.12.0 | [LGPL-3.0 y licencias de componentes incorporados](https://doc.qt.io/qt-6/licenses-used-in-qt.html) |
+| Qt Core, Gui, Widgets, PrintSupport, Network, Svg y Test | 6.12.0 | [LGPL-3.0 y licencias de componentes incorporados](https://doc.qt.io/qt-6/licenses-used-in-qt.html) |
 | pypdfium2 | 5.14.0 | Apache-2.0 / BSD-3-Clause y avisos de [pypdfium2](https://github.com/pypdfium2-team/pypdfium2) |
 | PDFium | Distribuido por pypdfium2 5.14.0 | BSD y licencias de terceros, incluidas en los avisos del paquete |
 | fontTools | 4.67.0 | [MIT](https://github.com/fonttools/fonttools) |

@@ -1,4 +1,4 @@
-#define AppVersion "1.2.0"
+#define AppVersion "1.3.0"
 [Setup]
 AppId={{FC19C06D-689C-4C3F-ACAA-11E80B6EE439}
 AppName=Faro PDF
@@ -20,7 +20,7 @@ WizardStyle=modern
 ChangesAssociations=yes
 CloseApplications=yes
 DisableProgramGroupPage=yes
-VersionInfoVersion=1.2.0.0
+VersionInfoVersion=1.3.0.0
 CreateUninstallRegKey=not ValidationMode
 InfoAfterFile=INSTALAR.txt
 

@@ -16,8 +16,8 @@ La interfaz actual está en español.
 
 Para **Windows 10/11 de 64 bits**:
 
-- [Descargar instalador de Faro PDF 1.2.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.2.0/FaroPDF-1.2.0-Instalar.exe)
-- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.2.0/FaroPDF-1.2.0-Portable.zip)
+- [Descargar instalador de Faro PDF 1.3.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.3.0/FaroPDF-1.3.0-Instalar.exe)
+- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.3.0/FaroPDF-1.3.0-Portable.zip)
 - [Ver todas las versiones y notas](https://github.com/PabloVPMX/faro-pdf/releases)
 
 El instalador incluye Python, Qt y PDFium; no hace falta instalarlos por
@@ -55,6 +55,9 @@ desactivar el antivirus. Consulta nuestra [Code signing policy](CODE_SIGNING.md)
 ## Qué puedes hacer
 
 - Leer PDF con desplazamiento vertical continuo, navegar por páginas y ajustar el zoom.
+- Buscar texto en todas las páginas, con coincidencias resaltadas, mayúsculas y
+  palabras completas; avanzar y retroceder con Enter, F3 y Mayús+F3.
+- Imprimir con el diálogo de Windows, seleccionar páginas y revisar la vista previa.
 - Editar texto nativo directamente en sus recuadros: seleccionar, añadir y
   borrar letras, escribir acentos e insertar saltos de línea.
 - Conservar la fuente original cuando sus recursos permiten verificar el
@@ -87,12 +90,28 @@ en **Ver → Desplazamiento vertical continuo** para ver una sola página.
 Desplazarte mientras escribes conserva la edición en su página; hacer clic
 en otra página aplica el cambio antes de comenzar a trabajar allí.
 
+## Buscar e imprimir
+
+Pulsa **Ctrl+F** o **Archivo → Buscar en el documento**. Escribe el texto y usa
+las flechas, **Enter / F3** y **Mayús+Enter / Mayús+F3** para recorrer los resultados.
+**Aa** distingue mayúsculas y **Palabra completa** evita coincidencias parciales.
+**Esc** cierra la barra. La búsqueda incluye las ediciones aplicadas y vuelve a
+calcularse al cambiar el contenido. Los resaltados son solo visuales: no se
+guardan ni se imprimen. Los escaneos sin texto necesitan OCR.
+
+Pulsa **Ctrl+P** o **Archivo → Imprimir** para elegir la impresora y las páginas.
+**Archivo → Vista previa de impresión** permite revisar la salida antes de
+enviarla. Se imprime la versión editada actual, ajustada al área imprimible y
+conservando las proporciones, con imágenes de hasta 300 ppp. Las páginas de
+distinto tamaño se adaptan al papel elegido en el diálogo. La impresión no
+cambia el PDF original ni sustituye el guardado de una copia.
+
 ## Límites actuales
 
 - Los escaneos son imágenes: esta versión no incluye OCR.
 - Algunos PDF, fuentes, transparencias y estructuras complejas pueden
   rechazar cambios para evitar alterar el resto de la página.
-- No incluye todavía impresión, búsqueda, firmas digitales de documentos,
+- No incluye todavía firmas digitales de documentos,
   edición de PDF con contraseña ni recomposición automática de párrafos.
 - Los cuadros nuevos ajustan sus líneas al ancho. El texto original conserva
   su disposición; no se recompone automáticamente como un documento de Word.

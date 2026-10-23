@@ -17,7 +17,7 @@ def read(path):
     return cache[path]
 
 rows=[]
-for name in ['PySide6/QtCore.pyd','PySide6/Qt6Core.dll','PySide6/Qt6Gui.dll','PySide6/Qt6Widgets.dll','PySide6/pyside6.abi3.dll','shiboken6/Shiboken.pyd']:
+for name in ['PySide6/QtCore.pyd','PySide6/Qt6Core.dll','PySide6/Qt6Gui.dll','PySide6/Qt6Widgets.dll','PySide6/QtPrintSupport.pyd','PySide6/Qt6PrintSupport.dll','PySide6/pyside6.abi3.dll','shiboken6/Shiboken.pyd']:
     for dep in getattr(read(bundle/name),'DIRECTORY_ENTRY_IMPORT',[]):
         dll=dep.dll.decode()
         if dll.lower().startswith(('api-ms-','ext-ms-')):continue

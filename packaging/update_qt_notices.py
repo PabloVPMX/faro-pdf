@@ -24,7 +24,7 @@ def download(url):
 urls=['https://doc.qt.io/qt-6/licenses-used-in-qt.html','https://doc.qt.io/qtforpython-6/licenses.html']
 index=download(urls[0]);download(urls[1])
 links=Links();links.feed(index)
-modules=('qtcore-','qtgui-','qtnetwork-','qtsvg-','qttest-','qtwidgets-','qtconcurrent-')
+modules=('qtcore-','qtgui-','qtprintsupport-','qtnetwork-','qtsvg-','qttest-','qtwidgets-','qtconcurrent-')
 for href in sorted(set(links.links)):
     name=href.rsplit('/',1)[-1]
     if '-attribution-' in name and name.startswith(modules):
