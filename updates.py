@@ -224,7 +224,6 @@ class UpdateController(QObject):
         self.force_install = False
 
     def before_close(self):
-        self.timer.stop()
         if not self.ready or not self.installed or not (self.force_install or self.option('auto_install')):
             return True
         try:

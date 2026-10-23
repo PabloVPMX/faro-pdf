@@ -117,6 +117,7 @@ def check_updates(window, app, work):
     checks = check_service(work)
     controller = window.updates
     controller.settings = QSettings(str(Path(work)/'update-settings.ini'), QSettings.Format.IniFormat)
+    controller.settings.clear()
     controller.root = Path(work)/'qt-update-cache'
     controller.transport = FixtureTransport()
     controller.transport.delay = .08
