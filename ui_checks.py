@@ -1,5 +1,6 @@
 """Synthetic interaction checks shared by source and packaged diagnostics."""
 import hashlib
+import time
 from pathlib import Path
 
 
@@ -34,7 +35,13 @@ def check_document_view(window, app, work):
         page=window.model.doc[i];bitmap=page.render(scale=1)
         before.append(hashlib.sha256(bytes(bitmap.buffer)).hexdigest())
         bitmap.close();page.close()
-    view.scroll_to_page(1);QTest.qWait(90)
+    view.scroll_to_page(1)
+    # Initial layout and scrollbar geometry may settle after several event-loop
+    # turns on Windows. Wait for the observable state instead of assuming 90 ms.
+    deadline=time.monotonic()+5
+    while window.model.index!=1 or window.page_number.value()!=2:
+        assert time.monotonic()<deadline, 'The second page did not activate after scrolling.'
+        QTest.qWait(25)
     assert window.model.index==1 and window.page_number.value()==2
     assert view.horizontalScrollBar().maximum()==0, 'Fit width must include page margins.'
     checks['scroll_activates_correct_page']=True
