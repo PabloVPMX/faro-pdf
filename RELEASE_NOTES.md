@@ -1,11 +1,15 @@
-**Faro PDF 1.1.1** añade vista vertical continua y cuadros de texto dentro del documento. Es un lector y editor gratuito y de código abierto para Windows.
+**Faro PDF 1.2.0** añade el botón **Actualizar** y actualizaciones automáticas. Es un lector y editor gratuito y de código abierto para Windows.
 
-Esta revisión corrige el indicador de página durante el scroll y evita que el zoom inicial cambie al pasar a otra hoja.
+La edición instalada busca versiones cada día mientras usas Faro, descarga las novedades en segundo plano y las instala al cerrar todas las ventanas. Puedes desactivar ambas opciones en **Actualizar** o **Archivo → Actualizaciones**. **Actualizar ahora** instala y vuelve a abrir Faro. Siempre se respeta el diálogo habitual de guardar cambios.
+
+**Si ya tienes Faro 1.1.1 o anterior**, descarga únicamente el instalador nuevo y ejecútalo sobre la instalación existente. No hace falta desinstalar. Esta instalación inicial incorpora el actualizador para las versiones futuras. La edición portátil se actualiza descargando y extrayendo el ZIP completo.
+
+Se comprueban el informe de publicación, el tamaño y las sumas SHA-256 de GitHub antes de ejecutar el instalador. Esta comprobación no sustituye la firma digital de Windows, que sigue pendiente. Las conexiones a GitHub no envían tus PDF.
 
 ### Descargar
 
-- **FaroPDF-1.1.1-Instalar.exe**: instalación por usuario, accesos directos y registro en «Abrir con». Incluye sus dependencias; no hace falta instalar Python.
-- **FaroPDF-1.1.1-Portable.zip**: extrae la carpeta completa y abre `FaroPDF.exe`. Conserva `_internal` junto al ejecutable.
+- **FaroPDF-1.2.0-Instalar.exe**: instalación por usuario, accesos directos y registro en «Abrir con». Incluye sus dependencias; no hace falta instalar Python.
+- **FaroPDF-1.2.0-Portable.zip**: extrae la carpeta completa y abre `FaroPDF.exe`. Conserva `_internal` junto al ejecutable.
 - **SHA256SUMS.txt**: sumas para comprobar la integridad de las descargas.
 - **verification.json**: resultado de las comprobaciones automatizadas.
 

@@ -1,8 +1,12 @@
-FARO PDF 1.1.1 - Primera version publica preliminar
+FARO PDF 1.2.0 - Actualizaciones desde Faro
 Windows 10/11 de 64 bits
 
 INSTALAR
-Ejecuta FaroPDF-1.1.1-Instalar.exe. Incluye Python, Qt y PDFium.
+Ejecuta FaroPDF-1.2.0-Instalar.exe. Incluye Python, Qt y PDFium.
+Si ya tienes Faro, instala encima sin desinstalar. Esta version incorpora
+el boton Actualizar. Busca y descarga versiones diariamente mientras usas
+la app y las instala al cerrar todas sus ventanas. Puedes desactivar ambas
+opciones desde Actualizar. Tus documentos no se envian a GitHub.
 No requiere permisos de administrador. Puede desinstalarse desde
 Configuracion > Aplicaciones. Actualiza las versiones anteriores.
 
@@ -11,7 +15,7 @@ Clic derecho en un PDF > Abrir con > Elegir otra aplicacion > Faro PDF.
 Windows conserva tu lector actual hasta que elijas otro.
 
 PORTABLE
-Extrae TODO FaroPDF-1.1.1-Portable.zip y abre FaroPDF.exe.
+Extrae TODO FaroPDF-1.2.0-Portable.zip y abre FaroPDF.exe.
 Conserva _internal junto al ejecutable.
 
 EDICION

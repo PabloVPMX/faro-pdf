@@ -22,7 +22,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.1.1'
+VERSION = '1.2.0'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -508,7 +508,7 @@ class Canvas(QGraphicsView):
 
 
 class Window(QMainWindow):
-    def __init__(self):
+    def __init__(self, updates_enabled=True):
         super().__init__()
         self.model = None
         self.selected = None
@@ -546,6 +546,7 @@ class Window(QMainWindow):
         self.file_menu.addAction('Abrir PDF…\tCtrl+O', self.open_dialog)
         self.menu_save = self.file_menu.addAction('Guardar copia…\tCtrl+Mayús+S', self.save_as)
         self.file_menu.addSeparator()
+        self.file_menu.addAction('Actualizaciones…', lambda: self.updates.show_dialog())
         self.file_menu.addAction('Cerrar ventana', self.close)
         self.edit_menu.addAction('Insertar imagen…',self.choose_image)
         self.edit_menu.addAction('Insertar páginas de otros PDF…',self.insert_pdf_dialog)
@@ -599,6 +600,11 @@ class Window(QMainWindow):
         self.view_menu.addAction('Ajustar al ancho', self.fit_width)
         self.view_menu.addAction('Tamaño 100 %', self.actual_size)
         bar.addStretch()
+        self.update_button = QToolButton()
+        self.update_button.setAutoRaise(True)
+        self.update_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowDown))
+        self.update_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        bar.addWidget(self.update_button)
         self.icon_button(bar, QStyle.StandardPixmap.SP_ArrowLeft, 'Página anterior', lambda: self.page_step(-1))
         self.page_number = QSpinBox()
         self.page_number.setPrefix('Pág. ')
@@ -723,6 +729,9 @@ class Window(QMainWindow):
             self.addAction(action)
             self.shortcut_actions[shortcut] = action
         self.refresh_controls()
+
+        from updates import UpdateController
+        self.updates = UpdateController(self, self.update_button, VERSION, enabled=updates_enabled)
 
     def icon_button(self, layout, icon, tooltip, callback):
         b = QToolButton()
@@ -1145,11 +1154,18 @@ class Window(QMainWindow):
             self.statusBar().showMessage('Espera a que termine el reconocimiento local antes de cerrar.', 8000)
             event.ignore()
             return
+        if self.updates.wait_before_close():
+            event.ignore()
+            return
         if self.confirm_discard():
+            if not self.updates.before_close():
+                event.ignore()
+                return
             if self.model:
                 self.model.close()
             event.accept()
         else:
+            self.updates.cancelled_close()
             event.ignore()
 
     def font_report(self):
@@ -1228,7 +1244,7 @@ def main():
     app.setWindowIcon(QIcon(str(ROOT / 'assets' / 'faro.ico')))
     app.setStyle('Fusion')
     app.setStyleSheet(STYLE)
-    window = Window()
+    window = Window(updates_enabled=not bool(args.screenshot))
     if args.screenshot:
         window.show()
     else:

@@ -16,8 +16,8 @@ La interfaz actual está en español.
 
 Para **Windows 10/11 de 64 bits**:
 
-- [Descargar instalador de Faro PDF 1.1.1](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.1.1/FaroPDF-1.1.1-Instalar.exe)
-- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.1.1/FaroPDF-1.1.1-Portable.zip)
+- [Descargar instalador de Faro PDF 1.2.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.2.0/FaroPDF-1.2.0-Instalar.exe)
+- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.2.0/FaroPDF-1.2.0-Portable.zip)
 - [Ver todas las versiones y notas](https://github.com/PabloVPMX/faro-pdf/releases)
 
 El instalador incluye Python, Qt y PDFium; no hace falta instalarlos por
@@ -28,6 +28,24 @@ Windows conserva tu elección actual hasta que la cambies.
 
 Para la edición portable, extrae **todo el ZIP** y ejecuta `FaroPDF.exe`.
 Conserva la carpeta `_internal` junto al ejecutable.
+
+## Actualizaciones
+
+Pulsa **Actualizar** en la barra superior o **Archivo → Actualizaciones**.
+La edición instalada busca nuevas versiones cada día mientras se utiliza Faro,
+las descarga en segundo plano y las instala al cerrar todas sus ventanas.
+Los documentos pasan por el diálogo habitual de guardar cambios antes de cerrar.
+**Actualizar ahora** permite instalar y volver a abrir la aplicación.
+
+Las dos opciones automáticas están activadas inicialmente y se pueden desactivar
+en ese mismo cuadro. Sin conexión puedes seguir usando el programa. Faro comprueba
+el tamaño y SHA-256 del instalador contra los archivos de la publicación oficial.
+Esto comprueba la descarga; la firma digital de Windows continúa pendiente.
+
+Para pasar desde **1.1.1 o anteriores**, ejecuta una vez el nuevo instalador sobre
+la instalación existente: no hace falta desinstalar ni descargar los otros archivos.
+La edición portátil busca versiones, pero se actualiza extrayendo el ZIP nuevo.
+El canal incluye las versiones públicas preliminares con número completo.
 
 **Firma digital:** la primera versión pública todavía no está firmada.
 Windows puede mostrar advertencias o bloquearla, especialmente con Smart App
@@ -90,6 +108,8 @@ El procesamiento de los PDF ocurre localmente. Faro PDF no incluye
 telemetría, publicidad ni subida automática de documentos. Buscar una fuente
 abre Google Fonts en el navegador solo cuando pulsas esa opción; importar un
 TTF lee un archivo local y no lo instala en Windows.
+Las comprobaciones de actualizaciones conectan con GitHub y descargan sus paquetes;
+se pueden desactivar y nunca incluyen el contenido de los PDF.
 Consulta [PRIVACY.md](PRIVACY.md).
 
 ## Compilar y contribuir

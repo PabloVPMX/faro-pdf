@@ -1,4 +1,4 @@
-#define AppVersion "1.1.1"
+#define AppVersion "1.2.0"
 [Setup]
 AppId={{FC19C06D-689C-4C3F-ACAA-11E80B6EE439}
 AppName=Faro PDF
@@ -20,7 +20,7 @@ WizardStyle=modern
 ChangesAssociations=yes
 CloseApplications=yes
 DisableProgramGroupPage=yes
-VersionInfoVersion=1.1.1.0
+VersionInfoVersion=1.2.0.0
 CreateUninstallRegKey=not ValidationMode
 InfoAfterFile=INSTALAR.txt
 
@@ -61,9 +61,15 @@ Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueN
 
 [Run]
 Filename: "{app}\FaroPDF.exe"; Description: "Abrir Faro PDF"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\FaroPDF.exe"; Flags: nowait skipifnotsilent; Check: ReopenAfterUpdate
 Filename: "ms-settings:defaultapps"; Description: "Elegir la aplicacion predeterminada para PDF en Windows"; Flags: shellexec nowait postinstall skipifsilent unchecked
 
 [Code]
+function ReopenAfterUpdate: Boolean;
+begin
+  Result := ExpandConstant('{param:FAROREOPEN|0}') = '1';
+end;
+
 function ValidationMode: Boolean;
 begin
   Result := ExpandConstant('{param:VALIDATION|0}') = '1';

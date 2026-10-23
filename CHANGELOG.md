@@ -1,5 +1,17 @@
 # Cambios
 
+## 1.2.0 — Actualizaciones desde Faro
+
+- Botón Actualizar y menú Archivo → Actualizaciones, con búsqueda en segundo plano.
+- Búsqueda diaria y descarga automática configurables; instalación al cerrar todas
+  las ventanas después de guardar o descartar los cambios de forma habitual.
+- Actualizar ahora instala y vuelve a abrir Faro. Las ediciones anteriores requieren
+  instalar esta versión una vez; la edición portátil ofrece descargas manuales.
+- Comprobación del informe de la publicación, tamaño y SHA-256 antes de ejecutar
+  el instalador. Se rechazan descargas incompletas o alteradas.
+- Pruebas sin red para errores, cancelación, varias ventanas y protección de cambios.
+- Política de privacidad actualizada con las conexiones automáticas a GitHub.
+
 ## 1.1.1 — Navegación continua estable
 
 - El indicador de página sigue la hoja que contiene el centro visible del

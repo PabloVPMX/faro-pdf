@@ -28,7 +28,7 @@ python_license = Path(sys.base_prefix) / 'LICENSE.txt'
 if python_license.exists():
     (notices / 'Python-LICENSE.txt').write_bytes(python_license.read_bytes())
 packages = ['PySide6-Essentials', 'shiboken6', 'pypdfium2', 'fonttools', 'Pillow', 'numpy', 'pypdf']
-manifest = ['Faro PDF 1.1.1 - Dependencias de terceros', '',
+manifest = ['Faro PDF 1.2.0 - Dependencias de terceros', '',
             'Las bibliotecas mantienen sus respectivas licencias. Qt se distribuye como DLLs reemplazables.',
             'Esta aplicacion no incluye fuentes de Windows ni documentos de prueba.', '']
 for package in packages:
