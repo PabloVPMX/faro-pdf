@@ -1,0 +1,38 @@
+FARO PDF 1.0.2 - Primera version publica preliminar
+Windows 10/11 de 64 bits
+
+INSTALAR
+Ejecuta FaroPDF-1.0.2-Instalar.exe. Incluye Python, Qt y PDFium.
+No requiere permisos de administrador. Puede desinstalarse desde
+Configuracion > Aplicaciones. Actualiza las versiones anteriores.
+
+LECTOR PREDETERMINADO
+Clic derecho en un PDF > Abrir con > Elegir otra aplicacion > Faro PDF.
+Windows conserva tu lector actual hasta que elijas otro.
+
+PORTABLE
+Extrae TODO FaroPDF-1.0.2-Portable.zip y abre FaroPDF.exe.
+Conserva _internal junto al ejecutable.
+
+EDICION
+Editar texto: clic en un recuadro. Enter agrega linea; Ctrl+Enter o clic
+fuera aplica; Esc cancela. Opciones flotantes para fuente y tamano.
+El tirador verde mueve cuadros de texto. En Imagenes se puede arrastrar,
+borrar y cambiar de tamano. Edicion incluye insertar imagenes y paginas,
+combinar PDF, mover paginas y borrarlas. Ctrl+Z deshace.
+
+LIMITES
+No incluye OCR, impresion, busqueda, firmas de documentos ni PDF protegidos
+por contrasena. Los documentos complejos pueden rechazar cambios.
+Guarda copias y revisalas. El guardado incremental no es redaccion segura
+de datos: el contenido anterior puede permanecer en revisiones internas.
+
+FIRMA Y LICENCIAS
+Esta version inicial no esta firmada digitalmente. Windows puede bloquearla
+con Smart App Control. GitHub no sustituye una firma reconocida. La solicitud
+de firma para codigo abierto esta pendiente de evaluacion y aprobacion.
+Codigo original MIT. Qt/PySide6 y otras bibliotecas conservan sus licencias.
+Textos y avisos en _internal\assets\licenses. Qt usa DLLs reemplazables.
+
+Codigo, descargas, instrucciones y soporte:
+https://github.com/PabloVPMX/faro-pdf
