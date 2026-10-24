@@ -6,6 +6,10 @@ import math
 from pathlib import Path
 import sys
 
+if __name__ == '__main__' and len(sys.argv) == 3 and sys.argv[1] == '--ocr-worker':
+    from ocr_engine import worker_main
+    sys.exit(worker_main(sys.argv[2]))
+
 from PySide6.QtCore import Qt, QRectF, QSize, QTimer, QPointF
 from PySide6.QtGui import QAction, QImage, QPixmap, QPen, QColor, QKeySequence, QIcon, QFontDatabase, QFont, QActionGroup, QTransform
 from PySide6.QtWidgets import (
@@ -22,7 +26,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.3.1'
+VERSION = '1.4.0'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -153,6 +157,8 @@ class Canvas(QGraphicsView):
         self.setMouseTracking(True)
 
     def display(self, image):
+        if hasattr(self.owner, 'text_selection'):
+            self.owner.text_selection.clear()
         if hasattr(self.owner, 'search'):
             self.owner.search.before_canvas_clear()
         self.scene().clear()
@@ -293,6 +299,10 @@ class Canvas(QGraphicsView):
     def mousePressEvent(self, event):
         owner = self.owner
         pos = self.mapToScene(event.position().toPoint())
+        if owner.model and owner.mode == 'select' and event.button() == Qt.MouseButton.LeftButton:
+            self.setFocus(Qt.FocusReason.MouseFocusReason)
+            owner.text_selection.press(pos)
+            event.accept(); return
         if owner.model and owner.mode == 'read' and event.button() == Qt.MouseButton.LeftButton:
             self.pan_start = (event.globalPosition(), owner.document_view.verticalScrollBar().value(),
                               owner.document_view.horizontalScrollBar().value())
@@ -358,6 +368,9 @@ class Canvas(QGraphicsView):
         event.accept()
 
     def mouseMoveEvent(self, event):
+        if self.owner.model and self.owner.mode == 'select' and event.buttons() & Qt.MouseButton.LeftButton:
+            self.owner.text_selection.move(self.mapToScene(event.position().toPoint()))
+            event.accept(); return
         if self.pan_start:
             start, vertical, horizontal = self.pan_start
             delta = event.globalPosition()-start
@@ -401,6 +414,9 @@ class Canvas(QGraphicsView):
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        if self.owner.model and self.owner.mode == 'select' and event.button() == Qt.MouseButton.LeftButton:
+            self.owner.text_selection.move(self.mapToScene(event.position().toPoint()))
+            event.accept(); return
         if self.pan_start:
             self.pan_start = None
             self.setCursor(Qt.CursorShape.OpenHandCursor)
@@ -452,6 +468,9 @@ class Canvas(QGraphicsView):
             super().mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event):
+        if self.owner.model and self.owner.mode == 'select' and event.button() == Qt.MouseButton.LeftButton:
+            self.owner.text_selection.word(self.mapToScene(event.position().toPoint()))
+            event.accept(); return
         if self.owner.inline.active:
             if not self.owner.inline.pristine:
                 return super().mouseDoubleClickEvent(event)
@@ -550,6 +569,8 @@ class Window(QMainWindow):
         self.menu_print = self.file_menu.addAction('Imprimir…\tCtrl+P', lambda:self.printing.print_dialog())
         self.menu_preview = self.file_menu.addAction('Vista previa de impresión…', lambda:self.printing.preview())
         self.menu_find = self.file_menu.addAction('Buscar en el documento…\tCtrl+F', lambda:self.search.show())
+        self.menu_ocr = self.edit_menu.addAction('Reconocer texto (OCR)…', lambda:self.ocr.show())
+        self.edit_menu.addSeparator()
         self.file_menu.addSeparator()
         self.file_menu.addAction('Actualizaciones…', lambda: self.updates.show_dialog())
         self.file_menu.addAction('Cerrar ventana', self.close)
@@ -577,7 +598,7 @@ class Window(QMainWindow):
         self.modes = QActionGroup(self)
         self.modes.setExclusive(True)
         self.mode_buttons = {}
-        self.mode_titles = {'read':'Leer', 'text':'Editar texto', 'images':'Imágenes', 'add':'Añadir texto','imageadd':'Insertar imagen'}
+        self.mode_titles = {'read':'Leer', 'select':'Seleccionar texto', 'text':'Editar texto', 'images':'Imágenes', 'add':'Añadir texto','imageadd':'Insertar imagen'}
         for key, title in self.mode_titles.items():
             action = QAction(title, self)
             action.setCheckable(True)
@@ -741,6 +762,23 @@ class Window(QMainWindow):
         from printing import PrintController
         self.search = SearchController(self, stack)
         self.printing = PrintController(self)
+        from ocr import OCRController
+        from text_selection import TextSelection
+        self.ocr = OCRController(self)
+        self.text_selection = TextSelection(self)
+        action = QAction(self); action.setShortcut(QKeySequence('Ctrl+C'))
+        action.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        action.triggered.connect(self.text_selection.copy); self.canvas.addAction(action)
+        action = QAction(self); action.setShortcut(QKeySequence('Ctrl+A'))
+        action.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        action.triggered.connect(self.select_all_text); self.canvas.addAction(action)
+
+    def select_all_text(self):
+        if self.inline.active:
+            cursor = self.inline.editor.textCursor()
+            cursor.select(cursor.SelectionType.Document)
+            self.inline.editor.setTextCursor(cursor)
+        elif self.mode == 'select': self.text_selection.all()
 
     def icon_button(self, layout, icon, tooltip, callback):
         b = QToolButton()
@@ -770,6 +808,7 @@ class Window(QMainWindow):
         self.menu_print.setEnabled(self.model is not None)
         self.menu_preview.setEnabled(self.model is not None)
         self.menu_find.setEnabled(self.model is not None)
+        self.menu_ocr.setEnabled(self.model is not None and not self.ocr.busy)
         self.menu_undo.setEnabled(self.undo_button.isEnabled())
         self.menu_redo.setEnabled(self.redo_button.isEnabled())
 
@@ -785,6 +824,13 @@ class Window(QMainWindow):
         self.render_page()
 
     def show_context_menu(self, global_position, scene_position):
+        if self.mode == 'select':
+            menu = QMenu(self)
+            copy = menu.addAction('Copiar texto\tCtrl+C', self.text_selection.copy)
+            copy.setEnabled(bool(self.text_selection.value))
+            menu.addAction('Seleccionar todo el texto de la página\tCtrl+A', self.text_selection.all)
+            menu.exec(global_position)
+            return
         if not self.inline.active:
             self.select(self.canvas.hit_object(scene_position))
         menu = QMenu(self)
@@ -920,7 +966,7 @@ class Window(QMainWindow):
         self.refresh_controls()
         has_text = any(o.type == TEXT for o in self.model.objects)
         self.notice.setVisible(not has_text)
-        self.notice.setText('Esta página contiene letras en imágenes. Se conserva su apariencia: la conversión automática a texto con fuentes aproximadas está desactivada.')
+        self.notice.setText('Para buscar y copiar texto de esta imagen: Edición → Reconocer texto (OCR).')
         self.page_number.blockSignals(True)
         self.page_number.setRange(1, len(self.model.doc))
         self.page_number.setValue(self.model.index+1)
@@ -949,6 +995,7 @@ class Window(QMainWindow):
             self.details.setText('Haz clic sobre el texto para situar el cursor y escribir.' if self.mode == 'text' else
                                  'Selecciona una imagen y arrástrala para moverla.' if self.mode == 'images' else
                                  'Haz clic en la página para añadir texto.' if self.mode == 'add' else
+                                 'Arrastra sobre el texto para seleccionarlo y pulsa Ctrl+C para copiar.' if self.mode == 'select' else
                                  'Navega entre páginas, ajusta el zoom o cambia a un modo de edición.')
 
     def set_mode(self, mode):
@@ -960,7 +1007,8 @@ class Window(QMainWindow):
         self.mode_buttons[mode].setChecked(True)
         self.mode_picker.setText(self.mode_titles[mode])
         self.canvas.setDragMode(QGraphicsView.DragMode.ScrollHandDrag if mode == 'read' else QGraphicsView.DragMode.NoDrag)
-        self.canvas.setCursor(Qt.CursorShape.CrossCursor if mode == 'add' else Qt.CursorShape.ArrowCursor)
+        if hasattr(self, 'text_selection'): self.text_selection.clear()
+        self.canvas.setCursor(Qt.CursorShape.CrossCursor if mode == 'add' else Qt.CursorShape.IBeamCursor if mode == 'select' else Qt.CursorShape.ArrowCursor)
         self.select(None)
         self.canvas.refresh_text_boxes()
         if mode == 'add':
@@ -1169,6 +1217,11 @@ class Window(QMainWindow):
             QTimer.singleShot(0, self.render_page)
 
     def closeEvent(self, event):
+        if self.ocr.busy:
+            self.ocr.cancel()
+            self.statusBar().showMessage('Cancelando OCR. Vuelve a cerrar cuando termine.', 8000)
+            event.ignore()
+            return
         if self.printing.busy:
             event.ignore()
             return

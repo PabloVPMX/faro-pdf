@@ -1,0 +1,18 @@
+{
+  "GCC-RUNTIME-EXCEPTION.txt": {
+    "url": "https://raw.githubusercontent.com/gcc-mirror/gcc/master/COPYING.RUNTIME",
+    "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+  },
+  "GNU-LGPL-2.1.txt": {
+    "url": "https://raw.githubusercontent.com/Distrotech/gettext/master/gettext-runtime/intl/COPYING.LIB",
+    "sha256": "3fe5361f24b7c49ba12911c08f5a33f9cb18871d95d9fb881f5b8a4793e04288"
+  },
+  "Leptonica-LICENSE.txt": {
+    "url": "https://raw.githubusercontent.com/DanBloomberg/leptonica/master/leptonica-license.txt",
+    "sha256": "87829abb5bbb00b55a107365da89e9a33f86c4250169e5a1e5588505be7d5806"
+  },
+  "curl-COPYING.txt": {
+    "url": "https://raw.githubusercontent.com/curl/curl/master/COPYING",
+    "sha256": "82f2f4427d6545ee5aaac4f0b80428da6cc8ba41c2cf5da3a03680ec327b9681"
+  }
+}

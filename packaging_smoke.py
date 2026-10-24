@@ -9,7 +9,7 @@ import traceback
 def run(report_path):
     report_path = Path(report_path).resolve()
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    results = {'version': '1.3.1', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
+    results = {'version': '1.4.0', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
     checks = results['checks']
     window = None
     try:
@@ -88,6 +88,8 @@ def run(report_path):
         checks.update(check_reader(window, app, work))
         from owned_text_checks import check_owned_text
         checks.update(check_owned_text(window, app, work))
+        from ocr_checks import check_ocr
+        checks.update(check_ocr(window, app, work))
         window.render_page(); app.processEvents()
         window.grab().save(str(report_path.with_suffix('.png')))
         results['passed'] = True

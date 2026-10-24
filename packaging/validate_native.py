@@ -30,6 +30,21 @@ for name in ['PySide6/QtCore.pyd','PySide6/Qt6Core.dll','PySide6/Qt6Gui.dll','Py
         if missing:raise AssertionError(f'{name} / {dll}: {missing}')
         rows.append({'source':name,'dependency':dll,'resolved_in_bundle':target.is_relative_to(bundle),'missing_symbols':[]})
 assert not (bundle/'icuuc.dll').exists(), 'Windows ICU must not be shadowed'
+ocr = bundle/'ocr'
+assert (ocr/'tesseract.exe').is_file(), 'OCR executable missing'
+assert all((ocr/'tessdata'/f'{lang}.traineddata').is_file() for lang in ('spa','eng'))
+for binary in list(ocr.glob('*.dll')) + [ocr/'tesseract.exe']:
+    for dep in getattr(read(binary),'DIRECTORY_ENTRY_IMPORT',[]):
+        dll=dep.dll.decode()
+        if dll.lower().startswith(('api-ms-','ext-ms-')):continue
+        target=next((folder/dll for folder in (ocr,system) if (folder/dll).exists()),None)
+        if target is None:raise AssertionError('Missing OCR DLL: '+dll)
+        exports=getattr(read(target),'DIRECTORY_ENTRY_EXPORT',None)
+        symbols=exports.symbols if exports else []
+        names={s.name for s in symbols};ordinals={s.ordinal for s in symbols}
+        missing=[i.name.decode() if i.name else '#'+str(i.ordinal) for i in dep.imports if (i.name not in names if i.name else i.ordinal not in ordinals)]
+        if missing:raise AssertionError(f'OCR {binary.name} / {dll}: {missing}')
+        rows.append({'source':'ocr/'+binary.name,'dependency':dll,'resolved_in_bundle':target.is_relative_to(bundle),'missing_symbols':[]})
 report=root/'.cache/validation/native.json'
 report.parent.mkdir(parents=True,exist_ok=True)
 report.write_text(json.dumps({'passed':True,'imports':rows},indent=2),encoding='utf8')

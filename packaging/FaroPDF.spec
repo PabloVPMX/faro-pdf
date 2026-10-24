@@ -14,7 +14,8 @@ os.environ['PATH'] = os.pathsep.join([
 a = Analysis(
     [str(root / 'app.py')], pathex=[str(root)],
     binaries=collect_dynamic_libs('pypdfium2_raw'),
-    datas=[(str(root/'assets'), 'assets'), (str(root/'packaging'/'INSTALAR.txt'), '.')]
+    datas=[(str(root/'assets'), 'assets'), (str(root/'packaging'/'INSTALAR.txt'), '.'),
+           (str(root/'.cache'/'ocr-runtime'), 'ocr')]
           + collect_data_files('pypdfium2_raw') + collect_data_files('pypdfium2'),
     hiddenimports=collect_submodules('fontTools') + collect_submodules('pypdf') + ['packaging_smoke'],
     excludes=['tkinter','matplotlib','scipy','IPython','pytest','winrt','ocr_local'],

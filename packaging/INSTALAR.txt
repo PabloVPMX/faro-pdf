@@ -1,8 +1,8 @@
-FARO PDF 1.3.1 - Correccion al anadir texto
+FARO PDF 1.4.0 - OCR local y seleccion de texto
 Windows 10/11 de 64 bits
 
 INSTALAR
-Ejecuta FaroPDF-1.3.1-Instalar.exe. Incluye Python, Qt y PDFium.
+Ejecuta FaroPDF-1.4.0-Instalar.exe. Incluye Python, Qt, PDFium y OCR en espanol e ingles.
 Si ya tienes Faro, instala encima sin desinstalar. Esta version incorpora
 el boton Actualizar. Busca y descarga versiones diariamente mientras usas
 la app y las instala al cerrar todas sus ventanas. Puedes desactivar ambas
@@ -20,8 +20,14 @@ Clic derecho en un PDF > Abrir con > Elegir otra aplicacion > Faro PDF.
 Windows conserva tu lector actual hasta que elijas otro.
 
 PORTABLE
-Extrae TODO FaroPDF-1.3.1-Portable.zip y abre FaroPDF.exe.
+Extrae TODO FaroPDF-1.4.0-Portable.zip y abre FaroPDF.exe.
 Conserva _internal junto al ejecutable.
+
+OCR Y SELECCION
+Edicion > Reconocer texto (OCR): pagina actual, documento o rango.
+Todo se procesa localmente; puedes cancelar y deshacer. Se conservan las
+imagenes. Seleccionar texto permite arrastrar y copiar con Ctrl+C.
+Guarda una copia para conservar el reconocimiento.
 
 EDICION
 Editar texto: clic en un recuadro. Enter agrega linea; Ctrl+Enter o clic
@@ -31,8 +37,9 @@ borrar y cambiar de tamano. Edicion incluye insertar imagenes y paginas,
 combinar PDF, mover paginas y borrarlas. Ctrl+Z deshace.
 
 LIMITES
-No incluye OCR, impresion, busqueda, firmas de documentos ni PDF protegidos
-por contrasena. Los documentos complejos pueden rechazar cambios.
+No incluye firmas de documentos ni PDF protegidos por contrasena.
+OCR permite buscar y copiar escaneos; revisa nombres y cantidades reconocidas.
+No reconstruye las fuentes originales ni convierte imagenes en texto editable. Los documentos complejos pueden rechazar cambios.
 Guarda copias y revisalas. El guardado incremental no es redaccion segura
 de datos: el contenido anterior puede permanecer en revisiones internas.
 

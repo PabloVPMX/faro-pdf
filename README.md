@@ -16,8 +16,8 @@ La interfaz actual está en español.
 
 Para **Windows 10/11 de 64 bits**:
 
-- [Descargar instalador de Faro PDF 1.3.1](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.3.1/FaroPDF-1.3.1-Instalar.exe)
-- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.3.1/FaroPDF-1.3.1-Portable.zip)
+- [Descargar instalador de Faro PDF 1.4.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.4.0/FaroPDF-1.4.0-Instalar.exe)
+- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.4.0/FaroPDF-1.4.0-Portable.zip)
 - [Ver todas las versiones y notas](https://github.com/PabloVPMX/faro-pdf/releases)
 
 El instalador incluye Python, Qt y PDFium; no hace falta instalarlos por
@@ -58,6 +58,9 @@ desactivar el antivirus. Consulta nuestra [Code signing policy](CODE_SIGNING.md)
 - Buscar texto en todas las páginas, con coincidencias resaltadas, mayúsculas y
   palabras completas; avanzar y retroceder con Enter, F3 y Mayús+F3.
 - Imprimir con el diálogo de Windows, seleccionar páginas y revisar la vista previa.
+- Reconocer escaneos con OCR local en español e inglés, conservar su imagen y
+  obtener texto buscable y seleccionable, sin cuenta ni conexión.
+- Seleccionar texto nativo o reconocido y copiarlo con Ctrl+C.
 - Editar texto nativo directamente en sus recuadros: seleccionar, añadir y
   borrar letras, escribir acentos e insertar saltos de línea.
 - Conservar la fuente original cuando sus recursos permiten verificar el
@@ -99,7 +102,28 @@ las flechas, **Enter / F3** y **Mayús+Enter / Mayús+F3** para recorrer los res
 **Aa** distingue mayúsculas y **Palabra completa** evita coincidencias parciales.
 **Esc** cierra la barra. La búsqueda incluye las ediciones aplicadas y vuelve a
 calcularse al cambiar el contenido. Los resaltados son solo visuales: no se
-guardan ni se imprimen. Los escaneos sin texto necesitan OCR.
+guardan ni se imprimen. Para los escaneos, usa **Edición → Reconocer texto (OCR)**.
+
+## Reconocer escaneos y copiar texto
+
+Abre **Edición → Reconocer texto (OCR)**, elige la página actual, todo el documento
+o un rango como `1-3, 5`, y el idioma. Español e inglés están incluidos. El proceso
+se ejecuta localmente en un proceso independiente y permite cancelar; hasta que
+termina correctamente no cambia el documento. Las páginas que ya tienen texto
+se omiten para evitar duplicados.
+
+Faro conserva las imágenes y añade una capa de texto invisible. Compara el
+renderizado antes y después y descarta resultados que alteren su apariencia.
+Elige **Seleccionar texto**, arrastra sobre las palabras y pulsa **Ctrl+C**;
+**Ctrl+A** selecciona el texto de la página actual. La búsqueda funciona con
+**Ctrl+F**. Guarda una copia para conservar el reconocimiento al reabrir el PDF.
+**Ctrl+Z** deshace el OCR completo.
+
+Revisa nombres, acentos y cantidades: el reconocimiento puede contener errores.
+El OCR no identifica la fuente original ni reconstruye párrafos editables.
+Puedes añadir tus propios cuadros de texto sobre el documento con la herramienta
+habitual. Esta versión no corrige automáticamente la inclinación de los escaneos
+ni reconoce manuscritos de forma fiable.
 
 Pulsa **Ctrl+P** o **Archivo → Imprimir** para elegir la impresora y las páginas.
 **Archivo → Vista previa de impresión** permite revisar la salida antes de
@@ -110,7 +134,8 @@ cambia el PDF original ni sustituye el guardado de una copia.
 
 ## Límites actuales
 
-- Los escaneos son imágenes: esta versión no incluye OCR.
+- El OCR permite buscar y copiar escaneos; no convierte su imagen en texto
+  editable ni garantiza exactitud en documentos borrosos, tablas o manuscritos.
 - Algunos PDF, fuentes, transparencias y estructuras complejas pueden
   rechazar cambios para evitar alterar el resto de la página.
 - No incluye todavía firmas digitales de documentos,

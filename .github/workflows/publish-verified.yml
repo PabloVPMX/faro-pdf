@@ -55,20 +55,20 @@ jobs:
           import hashlib,json,pathlib,zipfile
           release=pathlib.Path('release')
           report=json.loads((release/'verification.json').read_text(encoding='utf8'))
-          assert report['version']=='1.3.1'
+          assert report['version']=='1.4.0'
           assert report['unsigned'] is True
           assert report['private_documents_included'] is False
           assert report['portable_integrity_verified'] is True
           for name in ('source','frozen','native','installer'):
               assert report['checks'][name]['passed'],name
-          expected={'FaroPDF-1.3.1-Instalar.exe','FaroPDF-1.3.1-Portable.zip','SHA256SUMS.txt','verification.json'}
+          expected={'FaroPDF-1.4.0-Instalar.exe','FaroPDF-1.4.0-Portable.zip','SHA256SUMS.txt','verification.json'}
           assert {p.name for p in release.iterdir()}==expected
           for artifact in report['artifacts']:
               path=release/artifact['file']
               assert path.name in expected and path.parent==release
               assert path.stat().st_size==artifact['bytes']
               assert hashlib.sha256(path.read_bytes()).hexdigest()==artifact['sha256']
-          with zipfile.ZipFile(release/'FaroPDF-1.3.1-Portable.zip') as archive:
+          with zipfile.ZipFile(release/'FaroPDF-1.4.0-Portable.zip') as archive:
               assert archive.testzip() is None
               assert not any(n.lower().endswith(('.pdf','.pfx','.p12','.key','.pem')) for n in archive.namelist())
           PY
@@ -76,17 +76,17 @@ jobs:
       - name: Publish preliminary release and downloadable packages
         shell: bash
         run: |
-          gh release create v1.3.1 release/FaroPDF-1.3.1-Instalar.exe release/FaroPDF-1.3.1-Portable.zip release/SHA256SUMS.txt release/verification.json \
+          gh release create v1.4.0 release/FaroPDF-1.4.0-Instalar.exe release/FaroPDF-1.4.0-Portable.zip release/SHA256SUMS.txt release/verification.json \
             --repo "$GITHUB_REPOSITORY" --target "$EXPECTED_SHA" \
-            --title 'Faro PDF 1.3.1 — Añadir texto sin bloquear por fuentes originales' \
+            --title 'Faro PDF 1.4.0 — OCR local y selección de texto' \
             --notes-file RELEASE_NOTES.md --prerelease
-          gh release view v1.3.1 --repo "$GITHUB_REPOSITORY" --json url,isDraft,isPrerelease,assets
+          gh release view v1.4.0 --repo "$GITHUB_REPOSITORY" --json url,isDraft,isPrerelease,assets
       - name: Check public download availability
         shell: bash
         run: |
-          curl --fail --head --location --retry 3 "https://github.com/$GITHUB_REPOSITORY/releases/download/v1.3.1/FaroPDF-1.3.1-Instalar.exe"
+          curl --fail --head --location --retry 3 "https://github.com/$GITHUB_REPOSITORY/releases/download/v1.4.0/FaroPDF-1.4.0-Instalar.exe"
           {
-            echo '## Faro PDF 1.3.1'
-            echo "[Public release](https://github.com/$GITHUB_REPOSITORY/releases/tag/v1.3.1)"
+            echo '## Faro PDF 1.4.0'
+            echo "[Public release](https://github.com/$GITHUB_REPOSITORY/releases/tag/v1.4.0)"
             echo 'Initial preliminary release; binaries are not digitally signed yet.'
           } >> "$GITHUB_STEP_SUMMARY"

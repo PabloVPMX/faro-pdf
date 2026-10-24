@@ -15,11 +15,18 @@ Se usan distribuciones sin modificar de sus respectivos proyectos.
 | Pillow | 13.0.0 | [HPND y componentes incorporados](https://github.com/python-pillow/Pillow) |
 | NumPy | 2.5.4 | [BSD-3-Clause y componentes incorporados](https://github.com/numpy/numpy) |
 | pypdf | 6.21.1 | [BSD-3-Clause](https://github.com/py-pdf/pypdf) |
+| Tesseract OCR | 5.5.3 | [Apache-2.0](https://github.com/tesseract-ocr/tesseract/tree/5.5.3), CLI independiente y sus bibliotecas |
+| tessdata_fast, español e inglés | commit 87416418657359cb625c412a48b6e1d6d41c29bd | [Apache-2.0](https://github.com/tesseract-ocr/tessdata_fast) |
 
 Los textos de licencia, avisos de los paquetes y manifiesto de versiones se
 incluyen en `_internal/assets/licenses/` en la distribución de Windows.
 Las copias de [LGPLv3](LICENSE-LGPL-3.0.txt) y [GPLv3](LICENSE-GPL-3.0.txt)
 acompañan también al código.
+
+El runtime OCR y sus avisos se incluyen en `_internal/ocr/`, con un manifiesto
+de los archivos y sus hashes. Sus DLL están aisladas de Qt y se pueden reemplazar
+por compilaciones compatibles. Consulta [los avisos de OCR](licenses/OCR-NOTICES.md)
+para la procedencia y las licencias de sus dependencias.
 
 ## Qt y sus bindings
 

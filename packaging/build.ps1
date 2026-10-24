@@ -9,6 +9,7 @@ function Invoke-Python([string[]]$PythonArguments) {
     if ($LASTEXITCODE -ne 0) { throw ('Python fallo: ' + ($PythonArguments -join ' ')) }
 }
 
+Invoke-Python -PythonArguments @('packaging\prepare_ocr.py')
 Invoke-Python -PythonArguments @('packaging\make_assets.py')
 Invoke-Python -PythonArguments @('app.py','--self-test','.cache\validation\source.json')
 if (-not ((Get-Content .cache\validation\source.json -Raw | ConvertFrom-Json).passed)) { throw 'Fallo prueba del codigo.' }
@@ -37,5 +38,5 @@ if (-not (Test-Path -LiteralPath $compiler)) {
 & $compiler (Join-Path $PSScriptRoot 'installer.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Fallo compilacion del instalador.' }
 & (Join-Path $PSScriptRoot 'validate_installer.ps1')
-Compress-Archive -Path dist\FaroPDF\* -DestinationPath release\FaroPDF-1.3.1-Portable.zip -Force
+Compress-Archive -Path dist\FaroPDF\* -DestinationPath release\FaroPDF-1.4.0-Portable.zip -Force
 Invoke-Python -PythonArguments @('packaging\release_manifest.py')

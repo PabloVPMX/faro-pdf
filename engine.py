@@ -114,7 +114,7 @@ class Document:
         self.page = self.doc[index]
         self.textpage = self.page.get_textpage()
         self.objects = list(self.page.get_objects(max_depth=0, textpage=self.textpage))
-        if index not in self.native_preflight and any(obj.type == TEXT for obj in self.objects):
+        if index not in self.native_preflight and any(obj.type == TEXT and pdf.raw.FPDFTextObj_GetTextRenderMode(obj) != 3 for obj in self.objects):
             try:
                 from content_patch import prepare_native,source_texts
                 self.native_preflight[index] = {'objects': prepare_native(self._edit_data, index),
@@ -240,6 +240,9 @@ class Document:
         """
         if self._text_runs is not None:
             return self._text_runs
+        if not any(obj.type == TEXT and pdf.raw.FPDFTextObj_GetTextRenderMode(obj) != 3 for obj in self.objects):
+            self._text_runs = []
+            return self._text_runs
         try:
             from content_patch import joinable_fragments
             joinable=joinable_fragments(self._edit_data,self.index)
@@ -251,6 +254,8 @@ class Document:
             if obj.type != TEXT:
                 continue
             ordinal+=1
+            if pdf.raw.FPDFTextObj_GetTextRenderMode(obj) == 3:
+                continue
             info = self.info(index)
             rows = self.character_geometry(index)
             if not rows:

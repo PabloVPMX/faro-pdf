@@ -2,7 +2,7 @@ from pathlib import Path
 import hashlib,json,zipfile
 
 root=Path(__file__).resolve().parents[1]
-version='1.3.1'
+version='1.4.0'
 release=root/'release'
 bundle=root/'dist/FaroPDF'
 with zipfile.ZipFile(release/f'FaroPDF-{version}-Portable.zip') as archive:
@@ -24,6 +24,7 @@ for name in ['source','frozen','native','installer']:
     assert result['passed'],name
     checks[name]=result
 report={'version':version,'unsigned':True,'private_documents_included':False,'portable_integrity_verified':True,'artifacts':artifacts,'checks':checks}
+report['ocr']=json.loads((bundle/'_internal/ocr/manifest.json').read_text(encoding='utf8'))
 (release/'verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
 (release/'SHA256SUMS.txt').write_text('\n'.join(a['sha256']+'  '+a['file'] for a in artifacts)+'\n',encoding='utf8')
 print(json.dumps({'version':version,'checks_passed':list(checks),'artifacts':artifacts},indent=2))

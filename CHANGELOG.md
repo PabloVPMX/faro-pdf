@@ -1,5 +1,16 @@
 # Cambios
 
+## 1.4.0 — OCR local y selección de texto
+
+- OCR con Tesseract 5.5.3 y modelos incluidos de español e inglés; sin conexión.
+- Reconocimiento de página actual, documento o rango; se omiten páginas con texto.
+- Capa de texto invisible que conserva las imágenes, rotaciones y recortes;
+  comprobación visual antes de aceptar el resultado.
+- Proceso independiente con progreso y cancelación; deshacer y rehacer el OCR.
+- Modo Seleccionar texto, copiar con Ctrl+C y seleccionar la página con Ctrl+A.
+- Búsqueda y selección del OCR al guardar y reabrir; edición propia independiente.
+- Pruebas de OCR real con escaneos sintéticos, páginas mixtas y cuatro rotaciones.
+
 ## 1.3.1 — Añadir texto sin depender de las fuentes originales
 
 - Los cuadros nuevos usan contenido y fuentes independientes. Una fuente del

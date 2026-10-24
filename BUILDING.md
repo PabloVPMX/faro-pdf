@@ -11,6 +11,7 @@ git clone https://github.com/PabloVPMX/faro-pdf.git
 cd faro-pdf
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-build.txt
+.\.venv\Scripts\python.exe packaging\prepare_ocr.py
 .\.venv\Scripts\python.exe app.py
 ```
 
@@ -32,10 +33,17 @@ compilador oficial de Inno Setup 6.7.3 cuando no está disponible. Comprueba
 su SHA-256 y su firma de origen antes de ejecutarlo. Las herramientas y
 cachés quedan en `.cache/`, fuera del código publicado.
 
+`prepare_ocr.py` descarga el instalador oficial de Tesseract 5.5.3 y los modelos
+de español e inglés de un commit fijado de tessdata_fast. Comprueba los hashes,
+extrae el ejecutable con 7-Zip sin instalarlo en Windows y conserva únicamente
+las DLL necesarias. El instalador de Faro incluye ese runtime en `_internal/ocr`,
+separado de las DLL de Qt. En ejecución no se descargan motores ni idiomas.
+Las herramientas de extracción quedan únicamente en la caché de compilación.
+
 Salida en `release/`:
 
-- `FaroPDF-1.3.1-Instalar.exe`
-- `FaroPDF-1.3.1-Portable.zip`
+- `FaroPDF-1.4.0-Instalar.exe`
+- `FaroPDF-1.4.0-Portable.zip`
 - `SHA256SUMS.txt`
 - Informes y ejemplo sintético de validación.
 
@@ -55,6 +63,11 @@ La prueba crea su propio PDF e imagen junto al informe. Comprueba texto
 multilínea con acentos, fuente y tamaño, imágenes, combinación y movimiento
 de páginas, deshacer, guardado, reapertura y conservación del original.
 No depende de archivos privados del desarrollador.
+
+También ejecuta OCR real sobre escaneos sintéticos con las cuatro rotaciones,
+CropBox desplazado y documentos mixtos. Verifica la conservación de imágenes,
+selección, copia, búsqueda, guardado, reapertura, cancelación y deshacer. El modo
+diagnóstico del ejecutable usa su propio proceso OCR y los idiomas empaquetados.
 
 Después de compilar, también se comprueban el binario, los imports nativos
 de Qt, la instalación y desinstalación aisladas, y la actualización sobre

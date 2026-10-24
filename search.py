@@ -190,7 +190,7 @@ class SearchController(QObject):
                     self.count.setToolTip('Se muestran las primeras 10 000 coincidencias. Afina el texto de búsqueda.')
                 elif not has_text:
                     self.count.setText('Sin texto buscable')
-                    self.count.setToolTip('Los escaneos necesitan reconocimiento OCR, que esta versión no incluye.')
+                    self.count.setToolTip('Para buscar en escaneos: Edición → Reconocer texto (OCR).')
             elif self.hits:
                 self.draw_active()
         except Exception as error:

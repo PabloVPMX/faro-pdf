@@ -1,44 +1,52 @@
-**Faro PDF 1.3.1** corrige el bloqueo al **añadir texto** en documentos cuyas fuentes originales no tienen un mapa ToUnicode verificable.
+**Faro PDF 1.4.0 incorpora OCR local en español e inglés y selección de texto.**
 
-Los cuadros nuevos usan sus propias fuentes y contenido independiente: puedes escribir acentos y saltos de línea, cambiar formato, moverlos y volver a editarlos al guardar y reabrir. Las fuentes y los elementos originales permanecen intactos. Si no se puede iniciar el editor, se revierte la inserción sin dejar un marcador «Texto».
+Abre **Edición → Reconocer texto (OCR)** y elige la página actual, todo el documento
+o un rango como `1-3, 5`. Tesseract y ambos idiomas están incluidos: no necesitas
+una cuenta ni conexión a internet. El proceso muestra el avance y permite cancelar.
+Las páginas que ya tienen texto se omiten para evitar duplicados.
 
-Se mantienen las funciones de impresión, búsqueda, imágenes, organización de páginas y actualizaciones de la versión anterior.
+Se conservan las imágenes originales y se añade texto invisible para buscar y
+copiar. Faro compara el renderizado antes y después y descarta un resultado que
+cambie la apariencia de la página. El reconocimiento se aplica completo al terminar;
+**Ctrl+Z** lo deshace. Guarda una copia para conservarlo al reabrir el PDF.
 
-**Ctrl+P / Archivo → Imprimir** abre el diálogo de Windows para elegir impresora y páginas. **Archivo → Vista previa de impresión** permite revisar la salida. Se imprime la edición actual, ajustada al papel y conservando las proporciones, con renderizado de hasta 300 ppp.
+En **Seleccionar texto**, arrastra sobre las palabras y pulsa **Ctrl+C**.
+**Ctrl+A** selecciona el texto de la página actual. **Ctrl+F** busca en el documento,
+incluido el texto reconocido. Se mantienen la edición, los cuadros de texto,
+imágenes, organización de páginas, impresión y actualizaciones.
 
-**Ctrl+F / Archivo → Buscar en el documento** busca en todas las páginas y resalta las coincidencias. Usa Enter/F3 y Mayús+Enter/Mayús+F3 para avanzar y retroceder. Incluye filtros de mayúsculas y palabras completas, funciona con páginas giradas y recalcula los resultados al editar. Los resaltados no se guardan ni se imprimen; los escaneos sin texto requieren OCR.
+### Actualizar y descargar
 
-Si tienes **1.2.0**, puedes actualizar desde el botón **Actualizar**. Se conservan la búsqueda diaria, la descarga en segundo plano y la instalación al cerrar todas las ventanas, configurables desde ese cuadro.
+Si tienes Faro 1.2.0 o posterior, pulsa **Actualizar → Buscar ahora → Actualizar ahora**.
+También puedes ejecutar el instalador sobre la versión anterior sin desinstalar.
 
-**Si ya tienes Faro 1.1.1 o anterior**, descarga únicamente el instalador nuevo y ejecútalo sobre la instalación existente. No hace falta desinstalar. Esta instalación inicial incorpora el actualizador para las versiones futuras. La edición portátil se actualiza descargando y extrayendo el ZIP completo.
+- **FaroPDF-1.4.0-Instalar.exe**: instalación por usuario, dependencias y OCR incluidos.
+- **FaroPDF-1.4.0-Portable.zip**: extrae todo el ZIP y abre `FaroPDF.exe`; conserva `_internal`.
+- **SHA256SUMS.txt** y **verification.json**: integridad y comprobaciones de la publicación.
 
-Se comprueban el informe de publicación, el tamaño y las sumas SHA-256 de GitHub antes de ejecutar el instalador. Esta comprobación no sustituye la firma digital de Windows, que sigue pendiente. Las conexiones a GitHub no envían tus PDF.
+Requiere **Windows 10/11 x64**. El instalador conserva tu elección del lector PDF
+predeterminado. Los documentos se procesan localmente y no se envían a GitHub.
 
-### Descargar
+### Límites
 
-- **FaroPDF-1.3.1-Instalar.exe**: instalación por usuario, accesos directos y registro en «Abrir con». Incluye sus dependencias; no hace falta instalar Python.
-- **FaroPDF-1.3.1-Portable.zip**: extrae la carpeta completa y abre `FaroPDF.exe`. Conserva `_internal` junto al ejecutable.
-- **SHA256SUMS.txt**: sumas para comprobar la integridad de las descargas.
-- **verification.json**: resultado de las comprobaciones automatizadas.
+El OCR puede confundir caracteres: revisa nombres, acentos y cantidades. No recupera
+la fuente original ni convierte el escaneo en párrafos editables. Puedes añadir tus
+propios cuadros de texto con las herramientas habituales. No se incluyen todavía
+firmas de documentos, PDF con contraseña ni recomposición automática de párrafos.
+El guardado incremental no es una función de redacción segura de información.
 
-Requiere **Windows 10/11 de 64 bits**. El instalador conserva tu elección del lector PDF predeterminado y permite desinstalar Faro desde Configuración de Windows.
-
-### Funciones
-
-Desplázate por varias páginas con la rueda y dibuja cuadros de texto directamente sobre la hoja. La fuente y el tamaño aparecen en una barra aparte; el texto nuevo se ajusta al ancho del cuadro y sigue siendo editable al guardar y reabrir. Se conservan la edición de texto nativo con acentos y varias líneas; las imágenes; la combinación y organización de páginas; deshacer, rehacer y guardar una copia. El procesamiento ocurre localmente.
-
-### Estado y límites
-
-Es una publicación preliminar, con mejoras pendientes. Usa copias y revisa el resultado. No incluye OCR, firmas de documentos, PDF con contraseña ni ajuste automático de párrafos. El guardado incremental **no es una función de redacción segura** de información confidencial. Las estructuras complejas pueden rechazar una edición para conservar el contenido.
-
-### Code signing policy
-
-Esta versión **todavía no está firmada digitalmente**. Windows puede advertir o bloquear su ejecución, especialmente con Smart App Control activo. Publicar en GitHub no equivale a una firma reconocida. La solicitud a SignPath Foundation se envió el 23 de octubre de 2026 y está pendiente de evaluación; no hay una aprobación concedida.
-
-Consulta la [política de firma](https://github.com/PabloVPMX/faro-pdf/blob/main/CODE_SIGNING.md), la [privacidad](https://github.com/PabloVPMX/faro-pdf/blob/main/PRIVACY.md) y los [avisos de terceros](https://github.com/PabloVPMX/faro-pdf/blob/main/THIRD_PARTY_NOTICES.md).
+Esta es una versión preliminar. Los ejecutables **siguen sin firma digital**;
+la solicitud a SignPath está pendiente. No se pide desactivar la seguridad de Windows.
+Consulta la [política de firma](https://github.com/PabloVPMX/faro-pdf/blob/main/CODE_SIGNING.md),
+la [privacidad](https://github.com/PabloVPMX/faro-pdf/blob/main/PRIVACY.md) y los
+[avisos de terceros](https://github.com/PabloVPMX/faro-pdf/blob/main/THIRD_PARTY_NOTICES.md).
 
 ### Verificación
 
-Los binarios provienen del código público y de la compilación automatizada de GitHub Actions. Pasaron las pruebas del código, ejecutable empaquetado, imports nativos de Qt, instalación y desinstalación aisladas, limpieza de DLL obsoletas al actualizar, texto, imágenes, páginas, guardado y reapertura. Las pruebas usan documentos sintéticos y el paquete no contiene documentos personales.
+La publicación usa la compilación automatizada del código público. Se comprueban
+código, ejecutable, imports nativos, instalación y desinstalación aisladas. Las
+pruebas incluyen OCR real en escaneos sintéticos con acentos, cuatro rotaciones,
+recortes desplazados y páginas mixtas; selección, copia, búsqueda, guardado,
+reapertura, deshacer y cancelación. No se incluyen documentos personales.
 
-El código original de Faro PDF se distribuye bajo licencia MIT. Las bibliotecas conservan sus licencias respectivas.
+El código original de Faro es MIT; sus dependencias conservan sus propias licencias.
