@@ -210,5 +210,7 @@ personales: reproduce el caso con un PDF de ejemplo sin información sensible.
 ## Code signing policy
 
 La política y el estado de la firma están en [CODE_SIGNING.md](CODE_SIGNING.md).
-La firma de futuras versiones está pendiente de obtener un proveedor y de su
-evaluación; no se afirma una aprobación de SignPath ni de Microsoft.
+SignPath Foundation rechazó la solicitud inicial por falta de trayectoria
+pública suficiente. Se evalúa la distribución MSIX mediante Microsoft Store
+como vía de firma sin presupuesto. Todavía no existe una edición aprobada
+por la tienda ni un certificado para los EXE de GitHub.

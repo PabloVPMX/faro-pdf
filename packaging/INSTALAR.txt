@@ -59,8 +59,9 @@ de datos: el contenido anterior puede permanecer en revisiones internas.
 
 FIRMA Y LICENCIAS
 Esta version inicial no esta firmada digitalmente. Windows puede bloquearla
-con Smart App Control. GitHub no sustituye una firma reconocida. La solicitud
-de firma para codigo abierto esta pendiente de evaluacion y aprobacion.
+con Smart App Control. GitHub no sustituye una firma reconocida. SignPath
+Foundation rechazo la solicitud inicial por falta de trayectoria publica.
+Se evalua una edicion MSIX para Microsoft Store; todavia no esta aprobada.
 Codigo original MIT. Qt/PySide6 y otras bibliotecas conservan sus licencias.
 Textos y avisos en _internal\assets\licenses. Qt usa DLLs reemplazables.
 
