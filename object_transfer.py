@@ -11,6 +11,7 @@ from pypdf.generic import NameObject, DictionaryObject, ArrayObject, ContentStre
 from insertions import writer_for, finish, resource, append_content, compose
 
 TEXT, IMAGE, PATH = pdf.raw.FPDF_PAGEOBJ_TEXT, pdf.raw.FPDF_PAGEOBJ_IMAGE, pdf.raw.FPDF_PAGEOBJ_PATH
+FORM=pdf.raw.FPDF_PAGEOBJ_FORM
 
 
 def union(boxes):
@@ -103,7 +104,7 @@ def export_objects(model,groups):
                 if getter(obj,*[C.byref(v) for v in values]): setter(obj,*[v.value for v in values])
         width,height=page.get_size();scale=min(2,math.sqrt(2_000_000/max(1,width*height)))
         before=page.render(scale=scale,draw_annots=False);bitmaps.append(before)
-        if all(model.objects[i].type in (IMAGE,PATH) for i in wanted):
+        if all(model.objects[i].type in (IMAGE,PATH,FORM) for i in wanted):
             from graphic_objects import export_graphics
             native=export_graphics(model._edit_data,model.index,wanted)
             check=pdf.PdfDocument(native);checkpage=check[0]
@@ -171,7 +172,7 @@ def export_objects(model,groups):
 def packet_bounds(data):
     document=pdf.PdfDocument(data);page=document[0]
     try:
-        boxes=[o.get_bounds() for o in page.get_objects(max_depth=0) if o.type in (TEXT,IMAGE,PATH)]
+        boxes=[o.get_bounds() for o in page.get_objects(max_depth=0) if o.type in (TEXT,IMAGE,PATH,FORM)]
         if not boxes:raise ValueError('El portapapeles no contiene objetos PDF seleccionables.')
         return union(boxes)
     finally:page.close();document.close()
@@ -233,11 +234,20 @@ def mutate_objects(model,groups,dx=0,dy=0,delete=False):
     if path_indices:
         from graphic_objects import transform_paths
         data=transform_paths(data,model.index,path_indices,dx,dy,delete)
+    form_indices=sorted({i for g in groups for i in g if model.objects[i].type==FORM},reverse=True)
+    for i in form_indices:
+        # Earlier deletions can shift indices; remap the original Form ordinal.
+        ordinal=sum(o.type==FORM for o in model.objects[:i])
+        document=pdf.PdfDocument(data);page=document[model.index]
+        try:current=[n for n,o in enumerate(page.get_objects(max_depth=0)) if o.type==FORM][ordinal]
+        finally:page.close();document.close()
+        from graphic_objects import transform_form
+        data=transform_form(data,model.index,current,dx,dy,delete)
     text_indices=[i for i,o in enumerate(model.objects) if o.type==TEXT]
     own=records(data,model.index)
     tasks=[]
     for group in groups:
-        group=tuple(i for i in group if model.objects[i].type!=PATH)
+        group=tuple(i for i in group if model.objects[i].type not in (PATH,FORM))
         if not group:continue
         ordinals=[text_indices.index(i) for i in group if model.objects[i].type==TEXT]
         if any(rec.get('owned') and rec['ordinals']==ordinals and ordinals for rec in own.values()):tasks.append(group)

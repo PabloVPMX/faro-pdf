@@ -42,8 +42,8 @@ Las herramientas de extracción quedan únicamente en la caché de compilación.
 
 Salida en `release/`:
 
-- `FaroPDF-1.5.1-Instalar.exe`
-- `FaroPDF-1.5.1-Portable.zip`
+- `FaroPDF-1.6.0-Instalar.exe`
+- `FaroPDF-1.6.0-Portable.zip`
 - `SHA256SUMS.txt`
 - Informes y ejemplo sintético de validación.
 

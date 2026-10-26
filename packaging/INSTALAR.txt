@@ -1,8 +1,8 @@
-FARO PDF 1.5.1 - Copia fiel de imágenes y texto trazado
+FARO PDF 1.6.0 - Selección de áreas y encabezados agrupados
 Windows 10/11 de 64 bits
 
 INSTALAR
-Ejecuta FaroPDF-1.5.1-Instalar.exe. Incluye Python, Qt, PDFium y OCR en espanol e ingles.
+Ejecuta FaroPDF-1.6.0-Instalar.exe. Incluye Python, Qt, PDFium y OCR en espanol e ingles.
 Si ya tienes Faro, instala encima sin desinstalar. Esta version incorpora
 el boton Actualizar. Busca y descarga versiones diariamente mientras usas
 la app y las instala al cerrar todas sus ventanas. Puedes desactivar ambas
@@ -20,7 +20,7 @@ Clic derecho en un PDF > Abrir con > Elegir otra aplicacion > Faro PDF.
 Windows conserva tu lector actual hasta que elijas otro.
 
 PORTABLE
-Extrae TODO FaroPDF-1.5.1-Portable.zip y abre FaroPDF.exe.
+Extrae TODO FaroPDF-1.6.0-Portable.zip y abre FaroPDF.exe.
 Conserva _internal junto al ejecutable.
 
 SELECCIONAR OBJETOS

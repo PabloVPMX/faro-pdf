@@ -26,7 +26,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.5.1'
+VERSION = '1.6.0'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -157,6 +157,7 @@ class Canvas(QGraphicsView):
         self.setMouseTracking(True)
 
     def display(self, image):
+        if hasattr(self.owner,'area_selection'):self.owner.area_selection.clear()
         if hasattr(self.owner, 'object_selection'):
             self.owner.object_selection.clear()
         if hasattr(self.owner, 'text_selection'):
@@ -175,6 +176,7 @@ class Canvas(QGraphicsView):
         self.refresh_text_boxes()
 
     def dragging(self):
+        if hasattr(self.owner,'area_selection') and self.owner.area_selection.start is not None:return True
         if hasattr(self.owner,'object_selection') and self.owner.object_selection.start is not None:return True
         return any(value is not None for value in
                    (self.drag_start, self.resize_start, self.text_drag_start,
@@ -302,6 +304,8 @@ class Canvas(QGraphicsView):
     def mousePressEvent(self, event):
         owner = self.owner
         pos = self.mapToScene(event.position().toPoint())
+        if owner.model and owner.mode=='area' and event.button()==Qt.MouseButton.LeftButton:
+            owner.area_selection.press(pos);event.accept();return
         if owner.model and owner.mode=='objects' and event.button()==Qt.MouseButton.LeftButton:
             owner.object_selection.press(pos,event.modifiers());event.accept();return
         if owner.model and owner.mode == 'select' and event.button() == Qt.MouseButton.LeftButton:
@@ -373,6 +377,9 @@ class Canvas(QGraphicsView):
         event.accept()
 
     def mouseMoveEvent(self, event):
+        if self.owner.model and self.owner.mode=='area':
+            self.owner.area_selection.move(self.mapToScene(event.position().toPoint()))
+            if self.owner.area_selection.start is not None:event.accept();return
         if self.owner.model and self.owner.mode=='objects':
             self.owner.object_selection.move(self.mapToScene(event.position().toPoint()))
             if self.owner.object_selection.start is not None:event.accept();return
@@ -422,6 +429,8 @@ class Canvas(QGraphicsView):
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        if self.owner.model and self.owner.mode=='area' and event.button()==Qt.MouseButton.LeftButton:
+            self.owner.area_selection.release(self.mapToScene(event.position().toPoint()));event.accept();return
         if self.owner.model and self.owner.mode=='objects' and event.button()==Qt.MouseButton.LeftButton:
             self.owner.object_selection.release(self.mapToScene(event.position().toPoint()));event.accept();return
         if self.owner.model and self.owner.mode == 'select' and event.button() == Qt.MouseButton.LeftButton:
@@ -592,6 +601,9 @@ class Window(QMainWindow):
         self.edit_menu.addAction('Insertar imagen…',self.choose_image)
         self.edit_menu.addAction('Insertar páginas de otros PDF…',self.insert_pdf_dialog)
         self.edit_menu.addAction('Mover página…',self.move_page_dialog)
+        rotate_menu=self.edit_menu.addMenu('Girar página')
+        for label,degrees in [('90° a la derecha',90),('90° a la izquierda',-90),('180°',180)]:
+            rotate_menu.addAction(label,lambda checked=False,d=degrees:self.rotate_page(d))
         self.edit_menu.addAction('Borrar página completa…',self.delete_page_dialog)
         self.edit_menu.addSeparator()
         self.save_button = self.icon_button(bar, QStyle.StandardPixmap.SP_DialogSaveButton, 'Guardar copia', self.save_as)
@@ -613,7 +625,7 @@ class Window(QMainWindow):
         self.modes = QActionGroup(self)
         self.modes.setExclusive(True)
         self.mode_buttons = {}
-        self.mode_titles = {'read':'Leer', 'objects':'Seleccionar objetos', 'select':'Seleccionar texto', 'text':'Editar texto', 'images':'Imágenes', 'add':'Añadir texto','imageadd':'Insertar imagen'}
+        self.mode_titles = {'read':'Leer', 'objects':'Seleccionar objetos', 'area':'Seleccionar área (imagen)', 'select':'Seleccionar texto', 'text':'Editar texto', 'images':'Imágenes', 'add':'Añadir texto','imageadd':'Insertar imagen'}
         for key, title in self.mode_titles.items():
             action = QAction(title, self)
             action.setCheckable(True)
@@ -783,6 +795,8 @@ class Window(QMainWindow):
         self.text_selection = TextSelection(self)
         from object_selection import ObjectSelection
         self.object_selection = ObjectSelection(self)
+        from area_selection import AreaSelection
+        self.area_selection=AreaSelection(self)
         self.clipboard_actions={}
         for label,shortcut,callback in [('Cortar','Ctrl+X',lambda:self.object_selection.copy(True)),
                                         ('Copiar','Ctrl+C',self.object_selection.copy),
@@ -838,7 +852,7 @@ class Window(QMainWindow):
         self.menu_redo.setEnabled(self.redo_button.isEnabled())
         if hasattr(self,'clipboard_actions'):
             chosen=(self.inline.editor.textCursor().hasSelection() if self.inline.active else
-                    bool(self.text_selection.value) if self.mode=='select' else bool(self.object_selection.selected_groups()))
+                    bool(self.text_selection.value) if self.mode=='select' else self.area_selection.bounds is not None if self.mode=='area' else bool(self.object_selection.selected_groups()))
             self.clipboard_actions['Copiar'].setEnabled(chosen)
             self.clipboard_actions['Cortar'].setEnabled(chosen and self.mode!='select')
             mime=QApplication.clipboard().mimeData()
@@ -857,6 +871,8 @@ class Window(QMainWindow):
         self.render_page()
 
     def show_context_menu(self, global_position, scene_position):
+        if self.mode=='area':
+            self.area_selection.context(global_position,scene_position);return
         if self.mode=='objects':
             self.object_selection.context(global_position,scene_position);return
         if self.mode == 'select':
@@ -1047,15 +1063,18 @@ class Window(QMainWindow):
         self.inline.cancel()
         self.mode = mode
         if hasattr(self,'object_selection'):self.object_selection.clear()
+        if hasattr(self,'area_selection'):self.area_selection.clear()
         self.mode_buttons[mode].setChecked(True)
         self.mode_picker.setText(self.mode_titles[mode])
         self.canvas.setDragMode(QGraphicsView.DragMode.ScrollHandDrag if mode == 'read' else QGraphicsView.DragMode.NoDrag)
         if hasattr(self, 'text_selection'): self.text_selection.clear()
-        self.canvas.setCursor(Qt.CursorShape.CrossCursor if mode == 'add' else Qt.CursorShape.IBeamCursor if mode == 'select' else Qt.CursorShape.ArrowCursor)
+        self.canvas.setCursor(Qt.CursorShape.CrossCursor if mode in ('add','area') else Qt.CursorShape.IBeamCursor if mode == 'select' else Qt.CursorShape.ArrowCursor)
         self.select(None)
         self.canvas.refresh_text_boxes()
         if mode == 'add':
             self.statusBar().showMessage('Arrastra un cuadro en la hoja y escribe dentro. Fuente y tamaño aparecen en la barra de formato.',15000)
+        elif mode=='area':
+            self.statusBar().showMessage('Dibuja un rectángulo sobre cualquier parte del PDF. Ctrl+C copia; Ctrl+X recorta visualmente; Ctrl+V pega como imagen.',20000)
 
     def select(self, index):
         if self.canvas.text_grip:
@@ -1170,6 +1189,11 @@ class Window(QMainWindow):
             ordered=[files.item(i).data(Qt.ItemDataRole.UserRole) for i in range(files.count())]
             at=len(self.model.doc) if position.currentIndex()==0 else 0 if position.currentIndex()==1 else number.value()
             self.change(lambda:self.model.insert_pdfs(ordered,at))
+
+    def rotate_page(self,degrees):
+        if not self.model:return
+        if self.inline.active and not self.inline.commit():return
+        self.change(lambda:self.model.rotate_page(self.model.index,degrees))
 
     def move_page_dialog(self):
         if not self.model:return

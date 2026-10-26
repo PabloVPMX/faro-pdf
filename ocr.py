@@ -6,7 +6,7 @@ import tempfile
 
 from PySide6.QtCore import QObject, QProcess, Qt
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QLabel, QFormLayout, QComboBox,
-                               QLineEdit, QDialogButtonBox, QProgressDialog)
+                               QLineEdit, QDialogButtonBox, QProgressDialog,QPlainTextEdit,QPushButton)
 from ocr_engine import page_range, runtime_path
 
 
@@ -21,6 +21,7 @@ class OCRController(QObject):
         self.last_summary = None
         self.buffer = b''
         self.terminal = None
+        self.result_dialog=None
 
     @property
     def busy(self):
@@ -155,6 +156,26 @@ class OCRController(QObject):
                     f'OCR: {len(result["changed"])} páginas reconocidas; '
                     f'{len(result["skipped"])} omitidas con texto; {len(result["empty"])} sin texto detectado. '
                     'Selecciona para copiar y guarda una copia para conservar el resultado.', 30000)
+                self.show_result(result)
         except Exception as error: self.window.error(error)
         finally:
             self.temporary.cleanup(); self.temporary = None
+
+    def show_result(self,result):
+        if self.result_dialog:self.result_dialog.close()
+        dialog=self.result_dialog=QDialog(self.window);dialog.setWindowTitle('Resultado del OCR');dialog.resize(570,420)
+        layout=QVBoxLayout(dialog)
+        changed=len(result['changed']);skipped=len(result['skipped']);empty=len(result['empty'])
+        label=QLabel(f'{changed} páginas con texto añadido · {skipped} ya tenían texto · {empty} sin texto detectado.\n\n'+
+                     ('Ahora puedes buscar con Ctrl+F y seleccionar letras para copiarlas. Guarda para conservar el OCR.' if changed else
+                      'No se añadió texto: las páginas ya permiten seleccionar y buscar, o no se detectaron letras.')+
+                     '\nEl aspecto del PDF se conserva. El OCR no convierte la página en cuadros editables ni separa imágenes.')
+        label.setWordWrap(True);layout.addWidget(label)
+        layout.addWidget(QLabel('Texto disponible en la página actual:'))
+        preview=QPlainTextEdit(self.window.model.textpage.get_text_bounded()[:8000]);preview.setReadOnly(True);layout.addWidget(preview)
+        select=QPushButton('Seleccionar texto en el documento')
+        def select_text():
+            self.window.set_mode('select');self.window.text_selection.all();dialog.close();self.window.canvas.setFocus()
+        select.clicked.connect(select_text);layout.addWidget(select)
+        buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Close);buttons.rejected.connect(dialog.close);layout.addWidget(buttons)
+        dialog.show()

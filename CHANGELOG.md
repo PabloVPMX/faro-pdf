@@ -1,5 +1,15 @@
 # Cambios
 
+## 1.6.0 — Áreas y encabezados agrupados
+
+- Girar la página actual 90° a derecha/izquierda o 180°, con guardado y Deshacer.
+
+- Selección de grupos Form, incluidos encabezados con transparencia, para copiar, cortar, pegar y mover conservando los recursos originales.
+- Seleccionar área (imagen): recuadro libre sobre cualquier parte de la página, copia a 300 ppp y pegado como imagen que se puede mover/redimensionar. El recorte se limita a 20 millones de píxeles por página.
+- Cortar área recorta visualmente el contenido sin rasterizar el resto y admite Deshacer. No es censura segura; las anotaciones y campos intersectados se rechazan.
+- OCR muestra un resultado con texto disponible y explica las páginas que ya tenían texto, sin modificar su apariencia.
+- Regresiones con encabezados Form, recortes parciales, cuatro rotaciones, CropBox, portapapeles, deshacer y original intacto.
+
 ## 1.5.1 — Copia fiel en PDF con texto trazado
 
 - La copia de imágenes y gráficos conserva los operadores y transformaciones

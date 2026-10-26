@@ -9,7 +9,7 @@ import traceback
 def run(report_path):
     report_path = Path(report_path).resolve()
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    results = {'version': '1.5.1', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
+    results = {'version': '1.6.0', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
     checks = results['checks']
     window = None
     try:
@@ -94,6 +94,8 @@ def run(report_path):
         checks.update(check_clipboard(window, app, work))
         from graphic_checks import check_graphics
         checks.update(check_graphics(window, app, work))
+        from area_checks import check_areas
+        checks.update(check_areas(window,app,work))
         window.render_page(); app.processEvents()
         window.grab().save(str(report_path.with_suffix('.png')))
         results['passed'] = True

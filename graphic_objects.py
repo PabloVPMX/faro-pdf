@@ -11,6 +11,7 @@ from insertions import writer_for,finish,compose
 
 PATH=pdf.raw.FPDF_PAGEOBJ_PATH
 IMAGE=pdf.raw.FPDF_PAGEOBJ_IMAGE
+FORM=pdf.raw.FPDF_PAGEOBJ_FORM
 CONSTRUCT={b'm',b'l',b'c',b'v',b'y',b'h',b're'}
 PAINT={b'S',b's',b'f',b'F',b'f*',b'B',b'B*',b'b',b'b*'}
 TEXT_OPS={b'BT',b'ET',b'Tf',b'Tm',b'Td',b'TD',b'T*',b'Tc',b'Tw',b'Tz',b'TL',b'Ts',b'Tr',b'Tj',b'TJ',b"'",b'"'}
@@ -88,7 +89,7 @@ def plan(data,index):
     raw=ContentStream(page.get('/Contents'),reader).get_data();ops=_operations(raw)
     resources=page['/Resources'];xobjects=resources.get('/XObject',{})
     xobjects=xobjects.get_object() if hasattr(xobjects,'get_object') else xobjects
-    paths=[];images=[];construct=[];clip=False;matrix=(1,0,0,1,0,0);stack=[]
+    paths=[];images=[];forms=[];construct=[];clip=False;matrix=(1,0,0,1,0,0);stack=[]
     matrices={}
     for i,op in enumerate(ops):
         operator=op.operator
@@ -106,19 +107,24 @@ def plan(data,index):
         elif operator==b'n':construct=[];clip=False
         elif operator==b'Do' and xobjects[op.operands[0]].get_object().get('/Subtype')=='/Image':
             images.append(dict(paint=i,matrix=matrix))
+        elif operator==b'Do' and xobjects[op.operands[0]].get_object().get('/Subtype')=='/Form':
+            child=xobjects[op.operands[0]].get_object()
+            forms.append(dict(paint=i,matrix=compose(matrix,tuple(map(float,child.get('/Matrix',(1,0,0,1,0,0)))))))
     document=pdf.PdfDocument(data);target=document[index]
     try:
         objects=list(target.get_objects(max_depth=0))
         path_indices=[i for i,o in enumerate(objects) if o.type==PATH]
         image_indices=[i for i,o in enumerate(objects) if o.type==IMAGE]
-        if len(paths)!=len(path_indices) or len(images)!=len(image_indices):
+        form_indices=[i for i,o in enumerate(objects) if o.type==FORM]
+        if len(paths)!=len(path_indices) or len(images)!=len(image_indices) or len(forms)!=len(form_indices):
             raise ValueError('No se pudo verificar la correspondencia de los gráficos de esta página.')
         path_map=dict(zip(path_indices,paths));image_map=dict(zip(image_indices,images))
-        for i,record in image_map.items():
+        form_map=dict(zip(form_indices,forms))
+        for i,record in list(image_map.items())+list(form_map.items()):
             if any(abs(a-b)>max(.0001,abs(b)*1e-5) for a,b in zip(record['matrix'],objects[i].get_matrix().get())):
                 raise ValueError('No coincide la transformación original de una imagen.')
     finally:target.close();document.close()
-    return raw,ops,path_map,image_map,matrices
+    return raw,ops,path_map,image_map,matrices,form_map
 
 
 def apply_edits(raw,edits):
@@ -139,7 +145,8 @@ def remove_path(edits,ops,record):
 
 
 def export_graphics(data,index,selected):
-    raw,ops,paths,images,_=plan(data,index);selected=set(selected);edits={}
+    raw,ops,paths,images,_,forms=plan(data,index);selected=set(selected);edits={}
+    images={**images,**forms}
     for i,record in paths.items():
         if i not in selected:remove_path(edits,ops,record)
     for i,record in images.items():
@@ -164,7 +171,7 @@ def export_graphics(data,index,selected):
 def transform_paths(data,index,indices,dx=0,dy=0,delete=False):
     from object_transfer import inverse
     from text_layout import num
-    raw,ops,paths,_,matrices=plan(data,index);edits={}
+    raw,ops,paths,_,matrices,_=plan(data,index);edits={}
     for object_index in indices:
         record=paths[object_index]
         if delete:remove_path(edits,ops,record);continue
@@ -178,4 +185,21 @@ def transform_paths(data,index,indices,dx=0,dy=0,delete=False):
                 edits[op.spans[n]]=num(float(op.operands[n])+(tx if n%2==0 else ty)).encode('ascii')
     writer=writer_for(data);page=writer.pages[index]
     stream=DecodedStreamObject();stream.set_data(apply_edits(raw,edits));page[NameObject('/Contents')]=writer._add_object(stream)
+    return finish(writer)
+
+
+def transform_form(data,index,object_index,dx=0,dy=0,delete=False):
+    from object_transfer import inverse
+    from text_layout import num
+    raw,ops,_,_,_,forms=plan(data,index)
+    rec=forms[object_index];op=ops[rec['paint']]
+    # Conjugate in the caller's coordinate system; Form /Matrix is applied by Do.
+    reader=PdfReader(io.BytesIO(data));page=reader.pages[index]
+    child=page['/Resources']['/XObject'][op.operands[0]].get_object()
+    matrix=compose(rec['matrix'],inverse(tuple(map(float,child.get('/Matrix',(1,0,0,1,0,0))))))
+    local=compose(compose(inverse(matrix),(1,0,0,1,dx,dy)),matrix)
+    replacement=b'' if delete else ('q '+' '.join(num(v) for v in local)+' cm '+str(op.operands[0])+' Do Q').encode('ascii')
+    writer=writer_for(data);target=writer.pages[index]
+    stream=DecodedStreamObject();stream.set_data(apply_edits(raw,{op.span:replacement}))
+    target[NameObject('/Contents')]=writer._add_object(stream)
     return finish(writer)

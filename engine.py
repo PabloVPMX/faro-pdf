@@ -636,6 +636,15 @@ class Document:
             page.close();candidate.close()
         self.install_bytes('Modificar imagen',after)
 
+    def rotate_page(self,index,degrees):
+        if degrees not in (-90,90,180):raise ValueError('Elige un giro de 90 o 180 grados.')
+        if not 0<=index<len(self.doc):raise ValueError('La página no existe.')
+        from insertions import writer_for,finish
+        from pypdf.generic import NameObject,NumberObject
+        writer=writer_for(self._data);page=writer.pages[index]
+        page[NameObject('/Rotate')]=NumberObject((page.rotation+degrees)%360)
+        self.install_bytes('Girar página',finish(writer))
+
     def move_page(self,source,destination):
         from insertions import rearrange_pages
         if not (0<=source<len(self.doc) and 0<=destination<len(self.doc)):raise ValueError('Página inválida.')

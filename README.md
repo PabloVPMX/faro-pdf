@@ -16,8 +16,8 @@ La interfaz actual está en español.
 
 Para **Windows 10/11 de 64 bits**:
 
-- [Descargar instalador de Faro PDF 1.5.1](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.5.1/FaroPDF-1.5.1-Instalar.exe)
-- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.5.1/FaroPDF-1.5.1-Portable.zip)
+- [Descargar instalador de Faro PDF 1.6.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.6.0/FaroPDF-1.6.0-Instalar.exe)
+- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.6.0/FaroPDF-1.6.0-Portable.zip)
 - [Ver todas las versiones y notas](https://github.com/PabloVPMX/faro-pdf/releases)
 
 El instalador incluye Python, Qt y PDFium; no hace falta instalarlos por
@@ -59,10 +59,12 @@ desactivar el antivirus. Consulta nuestra [Code signing policy](CODE_SIGNING.md)
   palabras completas; avanzar y retroceder con Enter, F3 y Mayús+F3.
 - Imprimir con el diálogo de Windows, seleccionar páginas y revisar la vista previa.
 - Reconocer escaneos con OCR local en español e inglés, conservar su imagen y
-  obtener texto buscable y seleccionable, sin cuenta ni conexión.
+  obtener texto buscable y seleccionable, sin cuenta ni conexión. El resultado muestra el texto disponible y explica cuándo se omitieron páginas que ya contenían texto.
 - Seleccionar texto nativo o reconocido y copiarlo con Ctrl+C.
 - Seleccionar imágenes y cuadros completos, arrastrarlos individualmente o en
   grupo, cortarlos, copiarlos y pegarlos en otra página o ventana de Faro.
+- Seleccionar encabezados y otros grupos Form, copiarlos, cortarlos y moverlos conservando sus recursos.
+- Usar **Seleccionar área (imagen)** para dibujar un recuadro sobre cualquier parte del PDF; Ctrl+C copia, Ctrl+X recorta visualmente y Ctrl+V pega como imagen móvil y redimensionable. La copia usa 300 ppp, con un límite de 20 millones de píxeles por página. No se rasteriza el resto del documento.
 - Seleccionar y trasladar gráficos vectoriales, incluidos contornos de letras,
   conservando sus formas sin buscar ni sustituir una fuente.
 - Editar texto nativo directamente en sus recuadros: seleccionar, añadir y
@@ -77,6 +79,7 @@ desactivar el antivirus. Consulta nuestra [Code signing policy](CODE_SIGNING.md)
 - Insertar imágenes, moverlas, redimensionarlas desde sus bordes y borrarlas.
 - Combinar varios PDF al inicio, al final o en una posición intermedia.
 - Mover y borrar páginas, deshacer y rehacer, y guardar una copia.
+- Girar la página actual 90° a derecha/izquierda o 180° desde **Edición → Girar página**, guardar el giro y deshacerlo.
 
 La vista usa todo el ancho disponible. Las opciones se muestran en menús y
 paneles flotantes para dejar espacio al documento.
@@ -92,7 +95,8 @@ paneles flotantes para dejar espacio al documento.
    verde para moverlo; el cuadro crece hacia abajo si hacen falta más líneas.
 5. En **Imágenes**, arrastra la imagen o sus tiradores. Las esquinas conservan
    la proporción. El menú Edición permite insertar imágenes y organizar páginas.
-6. Guarda con **Archivo → Guardar copia**. **Ctrl+Z** deshace.
+6. Para recortar una parte libre, elige **Seleccionar área (imagen)**, dibuja el rectángulo y usa Ctrl+C o Ctrl+X. Pega con Ctrl+V; en **Imágenes** puedes ajustar los bordes. Cortar área es un recorte visual reversible, no censura segura de información.
+7. Guarda con **Archivo → Guardar copia**. **Ctrl+Z** deshace.
 
 La vista continua está activada al abrir el documento. Puedes desactivarla
 en **Ver → Desplazamiento vertical continuo** para ver una sola página.

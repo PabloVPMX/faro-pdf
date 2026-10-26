@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, QPointF, QRectF, QMimeData, QByteArray
 from PySide6.QtGui import QPen, QColor, QImage
 from PySide6.QtWidgets import QApplication, QMenu
 from engine import TEXT, IMAGE, pdf
-from object_transfer import export_objects,paste_objects,mutate_objects,union,validate_change,PATH
+from object_transfer import export_objects,paste_objects,mutate_objects,union,validate_change,PATH,FORM
 
 MIME='application/x-faropdf-objects'
 MAX_CLIPBOARD=100*1024*1024
@@ -32,7 +32,7 @@ class ObjectSelection:
             indices=tuple(sorted({i for run in block['runs'] for i in run['indices']}))
             result.append((indices,block['bounds'],TEXT))
         for i,obj in enumerate(model.objects):
-            if obj.type==IMAGE:result.append(((i,),obj.get_bounds(),IMAGE))
+            if obj.type in (IMAGE,FORM):result.append(((i,),obj.get_bounds(),obj.type))
         from graphic_objects import selection_groups
         result.extend(selection_groups(model))
         return result
@@ -122,6 +122,7 @@ class ObjectSelection:
 
     def copy(self,cut=False):
         window=self.window
+        if window.mode=='area':window.area_selection.copy(cut);return
         if window.inline.active:
             cursor=window.inline.editor.textCursor()
             if cursor.hasSelection():
@@ -142,7 +143,7 @@ class ObjectSelection:
             try:
                 value=text.get_text_bounded()
                 if value:mime.setText(value)
-                if any(window.model.objects[i].type in (IMAGE,PATH) for group in groups for i in group):
+                if any(window.model.objects[i].type in (IMAGE,PATH,FORM) for group in groups for i in group):
                     from object_transfer import packet_bounds
                     import math
                     width,height=page.get_size()
