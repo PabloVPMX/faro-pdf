@@ -711,6 +711,9 @@ class Document:
         except Exception:
             self._load(before);raise
         self.undo_stack.append((label,before,self.current_version))
+        self.undo_stack=self.undo_stack[-30:]
+        while len(self.undo_stack)>1 and sum(len(entry[1]) for entry in self.undo_stack)>128*1024*1024:
+            self.undo_stack.pop(0)
         self.current_version=self.next_version;self.next_version+=1;self.redo_stack.clear()
 
     def add_image(self,path,x,top,width):

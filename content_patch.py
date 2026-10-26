@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from collections import OrderedDict
+from functools import lru_cache
 import ctypes as C
 import hashlib
 import io
@@ -60,7 +61,12 @@ def _hex(token):
 def _unicode_map(font, width):
     if '/ToUnicode' not in font or not isinstance(font['/ToUnicode'], StreamObject):
         _fail('La fuente no contiene un mapa ToUnicode explícito verificable.')
-    source = re.sub(rb'%[^\r\n]*', b'', font['/ToUnicode'].get_data())
+    return _cached_unicode_map(font['/ToUnicode'].get_data(),width)
+
+
+@lru_cache(maxsize=24)
+def _cached_unicode_map(data,width):
+    source = re.sub(rb'%[^\r\n]*', b'', data)
     if re.search(rb'\busecmap\b', source):
         _fail('El mapa de la fuente depende de otro CMap no resuelto.')
     spaces = re.findall(rb'\d+\s+begincodespacerange(.*?)endcodespacerange', source, re.S)
@@ -122,7 +128,7 @@ def _unicode_map(font, width):
                 _fail('El mapa ToUnicode contiene valores sobrantes no verificables.')
         except (IndexError, ValueError, OverflowError):
             _fail('No se pudo validar completamente el mapa ToUnicode de la fuente.')
-    return result
+    return MappingProxyType(result)
 
 
 class _Font:

@@ -26,7 +26,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.4.0'
+VERSION = '1.5.0'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -157,6 +157,8 @@ class Canvas(QGraphicsView):
         self.setMouseTracking(True)
 
     def display(self, image):
+        if hasattr(self.owner, 'object_selection'):
+            self.owner.object_selection.clear()
         if hasattr(self.owner, 'text_selection'):
             self.owner.text_selection.clear()
         if hasattr(self.owner, 'search'):
@@ -173,6 +175,7 @@ class Canvas(QGraphicsView):
         self.refresh_text_boxes()
 
     def dragging(self):
+        if hasattr(self.owner,'object_selection') and self.owner.object_selection.start is not None:return True
         return any(value is not None for value in
                    (self.drag_start, self.resize_start, self.text_drag_start,
                     self.box_start, self.pan_start)) or self.text_selecting
@@ -299,6 +302,8 @@ class Canvas(QGraphicsView):
     def mousePressEvent(self, event):
         owner = self.owner
         pos = self.mapToScene(event.position().toPoint())
+        if owner.model and owner.mode=='objects' and event.button()==Qt.MouseButton.LeftButton:
+            owner.object_selection.press(pos,event.modifiers());event.accept();return
         if owner.model and owner.mode == 'select' and event.button() == Qt.MouseButton.LeftButton:
             self.setFocus(Qt.FocusReason.MouseFocusReason)
             owner.text_selection.press(pos)
@@ -368,6 +373,9 @@ class Canvas(QGraphicsView):
         event.accept()
 
     def mouseMoveEvent(self, event):
+        if self.owner.model and self.owner.mode=='objects':
+            self.owner.object_selection.move(self.mapToScene(event.position().toPoint()))
+            if self.owner.object_selection.start is not None:event.accept();return
         if self.owner.model and self.owner.mode == 'select' and event.buttons() & Qt.MouseButton.LeftButton:
             self.owner.text_selection.move(self.mapToScene(event.position().toPoint()))
             event.accept(); return
@@ -414,6 +422,8 @@ class Canvas(QGraphicsView):
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        if self.owner.model and self.owner.mode=='objects' and event.button()==Qt.MouseButton.LeftButton:
+            self.owner.object_selection.release(self.mapToScene(event.position().toPoint()));event.accept();return
         if self.owner.model and self.owner.mode == 'select' and event.button() == Qt.MouseButton.LeftButton:
             self.owner.text_selection.move(self.mapToScene(event.position().toPoint()))
             event.accept(); return
@@ -468,6 +478,11 @@ class Canvas(QGraphicsView):
             super().mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event):
+        if self.owner.model and self.owner.mode=='objects':
+            pos=self.mapToScene(event.position().toPoint());group=self.owner.object_selection.hit(pos)
+            if group and self.owner.model.objects[group[0]].type==TEXT:
+                self.owner.edit_context_object(group[0],pos)
+            event.accept();return
         if self.owner.model and self.owner.mode == 'select' and event.button() == Qt.MouseButton.LeftButton:
             self.owner.text_selection.word(self.mapToScene(event.position().toPoint()))
             event.accept(); return
@@ -598,7 +613,7 @@ class Window(QMainWindow):
         self.modes = QActionGroup(self)
         self.modes.setExclusive(True)
         self.mode_buttons = {}
-        self.mode_titles = {'read':'Leer', 'select':'Seleccionar texto', 'text':'Editar texto', 'images':'Imágenes', 'add':'Añadir texto','imageadd':'Insertar imagen'}
+        self.mode_titles = {'read':'Leer', 'objects':'Seleccionar objetos', 'select':'Seleccionar texto', 'text':'Editar texto', 'images':'Imágenes', 'add':'Añadir texto','imageadd':'Insertar imagen'}
         for key, title in self.mode_titles.items():
             action = QAction(title, self)
             action.setCheckable(True)
@@ -766,9 +781,18 @@ class Window(QMainWindow):
         from text_selection import TextSelection
         self.ocr = OCRController(self)
         self.text_selection = TextSelection(self)
-        action = QAction(self); action.setShortcut(QKeySequence('Ctrl+C'))
-        action.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
-        action.triggered.connect(self.text_selection.copy); self.canvas.addAction(action)
+        from object_selection import ObjectSelection
+        self.object_selection = ObjectSelection(self)
+        self.clipboard_actions={}
+        for label,shortcut,callback in [('Cortar','Ctrl+X',lambda:self.object_selection.copy(True)),
+                                        ('Copiar','Ctrl+C',self.object_selection.copy),
+                                        ('Pegar','Ctrl+V',self.object_selection.paste)]:
+            action=QAction(label+'\t'+shortcut,self)
+            action.triggered.connect(lambda checked=False,cb=callback:cb())
+            self.edit_menu.addAction(action);self.clipboard_actions[label]=action
+            key=QAction(self);key.setShortcut(QKeySequence(shortcut))
+            key.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+            key.triggered.connect(lambda checked=False,cb=callback:cb());self.canvas.addAction(key)
         action = QAction(self); action.setShortcut(QKeySequence('Ctrl+A'))
         action.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         action.triggered.connect(self.select_all_text); self.canvas.addAction(action)
@@ -779,6 +803,7 @@ class Window(QMainWindow):
             cursor.select(cursor.SelectionType.Document)
             self.inline.editor.setTextCursor(cursor)
         elif self.mode == 'select': self.text_selection.all()
+        elif self.mode == 'objects': self.object_selection.all()
 
     def icon_button(self, layout, icon, tooltip, callback):
         b = QToolButton()
@@ -811,6 +836,14 @@ class Window(QMainWindow):
         self.menu_ocr.setEnabled(self.model is not None and not self.ocr.busy)
         self.menu_undo.setEnabled(self.undo_button.isEnabled())
         self.menu_redo.setEnabled(self.redo_button.isEnabled())
+        if hasattr(self,'clipboard_actions'):
+            chosen=(self.inline.editor.textCursor().hasSelection() if self.inline.active else
+                    bool(self.text_selection.value) if self.mode=='select' else bool(self.object_selection.selected_groups()))
+            self.clipboard_actions['Copiar'].setEnabled(chosen)
+            self.clipboard_actions['Cortar'].setEnabled(chosen and self.mode!='select')
+            mime=QApplication.clipboard().mimeData()
+            self.clipboard_actions['Pegar'].setEnabled(self.model is not None and mime is not None and
+                (mime.hasText() or mime.hasImage() or mime.hasFormat('application/x-faropdf-objects')))
 
     def page_step(self, delta):
         if self.model:
@@ -824,6 +857,8 @@ class Window(QMainWindow):
         self.render_page()
 
     def show_context_menu(self, global_position, scene_position):
+        if self.mode=='objects':
+            self.object_selection.context(global_position,scene_position);return
         if self.mode == 'select':
             menu = QMenu(self)
             copy = menu.addAction('Copiar texto\tCtrl+C', self.text_selection.copy)
@@ -836,16 +871,23 @@ class Window(QMainWindow):
         menu = QMenu(self)
         if self.inline.active:
             menu.addAction('Seleccionar todo', lambda: self.inline.select_all())
-            copy = menu.addAction('Copiar', lambda: QApplication.clipboard().setText(self.inline.editor.textCursor().selectedText()))
+            copy = menu.addAction('Copiar\tCtrl+C', self.object_selection.copy)
             copy.setEnabled(self.inline.editor.textCursor().hasSelection())
+            cut=menu.addAction('Cortar\tCtrl+X',lambda:self.object_selection.copy(True))
+            cut.setEnabled(self.inline.editor.textCursor().hasSelection())
+            menu.addAction('Pegar\tCtrl+V',lambda:self.object_selection.paste())
             menu.addSeparator()
         elif self.selected is not None:
             index = self.selected
+            menu.addAction('Cortar objeto\tCtrl+X',lambda:self.object_selection.copy(True))
+            menu.addAction('Copiar objeto\tCtrl+C',self.object_selection.copy)
             if self.model.objects[index].type == TEXT:
                 menu.addAction('Editar texto', lambda: self.edit_context_object(index, scene_position))
             else:
                 menu.addAction('Editar imagen', lambda: self.edit_context_object(index, scene_position, 'images'))
             menu.addAction('Borrar objeto', self.delete_selected)
+        if not self.inline.active:
+            menu.addAction('Pegar aquí\tCtrl+V',lambda:self.object_selection.paste(self.canvas.to_page(scene_position)))
         menu.addSeparator()
         menu.addAction('Opciones de la selección…', self.show_properties)
         menu.addAction('Páginas…', self.show_pages)
@@ -1004,6 +1046,7 @@ class Window(QMainWindow):
             return
         self.inline.cancel()
         self.mode = mode
+        if hasattr(self,'object_selection'):self.object_selection.clear()
         self.mode_buttons[mode].setChecked(True)
         self.mode_picker.setText(self.mode_titles[mode])
         self.canvas.setDragMode(QGraphicsView.DragMode.ScrollHandDrag if mode == 'read' else QGraphicsView.DragMode.NoDrag)
@@ -1143,6 +1186,8 @@ class Window(QMainWindow):
         if result==QMessageBox.StandardButton.Yes:self.change(lambda:self.model.delete_page(self.model.index))
 
     def delete_selected(self):
+        if self.mode=='objects':
+            self.object_selection.delete();return
         if self.inline.active:
             cursor = self.inline.editor.textCursor()
             cursor.deleteChar()

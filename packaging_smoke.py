@@ -9,7 +9,7 @@ import traceback
 def run(report_path):
     report_path = Path(report_path).resolve()
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    results = {'version': '1.4.0', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
+    results = {'version': '1.5.0', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
     checks = results['checks']
     window = None
     try:
@@ -90,6 +90,8 @@ def run(report_path):
         checks.update(check_owned_text(window, app, work))
         from ocr_checks import check_ocr
         checks.update(check_ocr(window, app, work))
+        from clipboard_checks import check_clipboard
+        checks.update(check_clipboard(window, app, work))
         window.render_page(); app.processEvents()
         window.grab().save(str(report_path.with_suffix('.png')))
         results['passed'] = True
@@ -97,6 +99,10 @@ def run(report_path):
         results['passed'] = False
         results['error'] = traceback.format_exc()
     finally:
+        # The offscreen platform has an isolated in-memory clipboard. Release
+        # its QMimeData while QApplication is alive (never touch the OS clipboard).
+        if window:
+            QApplication.clipboard().clear()
         if window:
             # Diagnostic fixtures must never start an installer, even on failure.
             window.updates.ready = window.updates.force_install = False

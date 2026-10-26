@@ -60,7 +60,8 @@ def body(page, key, text, size, matrix, color, font_name, box):
         raise ValueError('El cuadro contiene caracteres de control no admitidos.')
     font = _Font(page['/Resources']['/Font'][font_name].get_object())
     if box:
-        width = max(1,(box[2]-box[0])/max(math.hypot(matrix[0],matrix[1]),1e-8))
+        width = max(1,(abs(matrix[0])*(box[2]-box[0])+abs(matrix[1])*(box[3]-box[1]))/
+                    max(matrix[0]**2+matrix[1]**2,1e-8))
         lines = wrapped_lines(text,font,size,width,page['/Resources']['/Font'][font_name]['/BaseFont'])
     else:
         lines=[];start=0

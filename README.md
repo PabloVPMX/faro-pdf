@@ -16,8 +16,8 @@ La interfaz actual está en español.
 
 Para **Windows 10/11 de 64 bits**:
 
-- [Descargar instalador de Faro PDF 1.4.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.4.0/FaroPDF-1.4.0-Instalar.exe)
-- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.4.0/FaroPDF-1.4.0-Portable.zip)
+- [Descargar instalador de Faro PDF 1.5.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.5.0/FaroPDF-1.5.0-Instalar.exe)
+- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.5.0/FaroPDF-1.5.0-Portable.zip)
 - [Ver todas las versiones y notas](https://github.com/PabloVPMX/faro-pdf/releases)
 
 El instalador incluye Python, Qt y PDFium; no hace falta instalarlos por
@@ -61,6 +61,8 @@ desactivar el antivirus. Consulta nuestra [Code signing policy](CODE_SIGNING.md)
 - Reconocer escaneos con OCR local en español e inglés, conservar su imagen y
   obtener texto buscable y seleccionable, sin cuenta ni conexión.
 - Seleccionar texto nativo o reconocido y copiarlo con Ctrl+C.
+- Seleccionar imágenes y cuadros completos, arrastrarlos individualmente o en
+  grupo, cortarlos, copiarlos y pegarlos en otra página o ventana de Faro.
 - Editar texto nativo directamente en sus recuadros: seleccionar, añadir y
   borrar letras, escribir acentos e insertar saltos de línea.
 - Conservar la fuente original cuando sus recursos permiten verificar el
@@ -103,6 +105,26 @@ las flechas, **Enter / F3** y **Mayús+Enter / Mayús+F3** para recorrer los res
 **Esc** cierra la barra. La búsqueda incluye las ediciones aplicadas y vuelve a
 calcularse al cambiar el contenido. Los resaltados son solo visuales: no se
 guardan ni se imprimen. Para los escaneos, usa **Edición → Reconocer texto (OCR)**.
+
+## Seleccionar objetos, cortar y pegar
+
+Elige **Seleccionar objetos** en el selector de herramientas o en **Edición**.
+Un clic selecciona una imagen o un cuadro de texto completo; **Ctrl+clic** añade
+o quita elementos. Arrastra un recuadro alrededor de varios objetos para marcarlos
+juntos, o usa **Ctrl+A** para seleccionar los objetos de la página actual.
+
+Arrastra la selección para moverla. **Ctrl+C** copia, **Ctrl+X** corta,
+**Ctrl+V** pega y **Supr** borra. Estas acciones también están en Edición y en
+el menú del clic derecho. **Pegar aquí** sitúa la selección junto al cursor;
+Ctrl+V desplaza ligeramente cada copia. Puedes pegar en otra página o ventana de
+Faro. **Ctrl+Z** deshace el movimiento, corte o pegado completo en un solo paso.
+
+Los cuadros añadidos conservan su fuente, tamaño, color y líneas al copiarlos;
+haz doble clic para volver a editar su texto. Las imágenes conservan sus recursos
+PDF y transparencia. También puedes pegar imágenes o texto de otras aplicaciones.
+Mientras escribes dentro de un cuadro, los atajos actúan sobre sus letras.
+**Seleccionar texto** sigue disponible para copiar palabras, incluido el OCR;
+el texto invisible del OCR no se trata como un cuadro editable.
 
 ## Reconocer escaneos y copiar texto
 

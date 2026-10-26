@@ -42,8 +42,8 @@ Las herramientas de extracción quedan únicamente en la caché de compilación.
 
 Salida en `release/`:
 
-- `FaroPDF-1.4.0-Instalar.exe`
-- `FaroPDF-1.4.0-Portable.zip`
+- `FaroPDF-1.5.0-Instalar.exe`
+- `FaroPDF-1.5.0-Portable.zip`
 - `SHA256SUMS.txt`
 - Informes y ejemplo sintético de validación.
 
@@ -68,6 +68,11 @@ También ejecuta OCR real sobre escaneos sintéticos con las cuatro rotaciones,
 CropBox desplazado y documentos mixtos. Verifica la conservación de imágenes,
 selección, copia, búsqueda, guardado, reapertura, cancelación y deshacer. El modo
 diagnóstico del ejecutable usa su propio proceso OCR y los idiomas empaquetados.
+
+Las pruebas de portapapeles usan el portapapeles virtual de la plataforma Qt
+offscreen, aislado del portapapeles de Windows. Comprueban selección y arrastre
+real con eventos de ratón, Ctrl+X/C/V, grupos, fuentes incrustadas, transparencias,
+página girada, pegados repetidos, edición posterior y guardado/reapertura.
 
 Después de compilar, también se comprueban el binario, los imports nativos
 de Qt, la instalación y desinstalación aisladas, y la actualización sobre

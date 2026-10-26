@@ -1,5 +1,19 @@
 # Cambios
 
+## 1.5.0 — Seleccionar, cortar, copiar y pegar objetos
+
+- Modo Seleccionar objetos: imágenes y cuadros completos con clic, Ctrl+clic,
+  recuadro de selección y Ctrl+A; arrastre de varios elementos juntos.
+- Cortar, copiar y pegar con Ctrl+X/C/V, menú Edición y menú contextual; pegar aquí.
+- Fragmentos PDF con fuentes e imágenes conservadas, compatibles con otras páginas
+  y ventanas de Faro; los cuadros propios continúan editables al guardar y reabrir.
+- Pegado de imágenes y texto externos; atajos de letras mientras se usa el cursor.
+- Corte, borrado, arrastre y pegado atómicos, con deshacer y comprobación visual
+  de conservación fuera de la selección. No se regeneran los streams del destino.
+- Reutilización de fuentes idénticas al pegar y de mapas Unicode ya verificados.
+- Pruebas sintéticas de fuentes, transparencia, página girada, pegados repetidos,
+  párrafos nativos, portapapeles externo, cancelación de errores y deshacer.
+
 ## 1.4.0 — OCR local y selección de texto
 
 - OCR con Tesseract 5.5.3 y modelos incluidos de español e inglés; sin conexión.

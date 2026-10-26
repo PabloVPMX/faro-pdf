@@ -11,6 +11,13 @@ un cierre forzado del sistema podría dejar restos en la carpeta temporal de Win
 El resultado solo se conserva como PDF cuando eliges guardarlo. El OCR no hace
 peticiones a servicios externos ni descarga idiomas durante el uso.
 
+Copiar y cortar colocan los objetos seleccionados en el portapapeles de Windows,
+incluyendo los recursos de fuentes e imágenes necesarios para pegarlos. Otras
+aplicaciones y las funciones de historial o sincronización del portapapeles de
+Windows pueden acceder a esos datos según la configuración del usuario. Faro
+no los envía por su cuenta a un servidor. Pegar puede leer texto o imágenes
+colocados allí por otras aplicaciones.
+
 La búsqueda de texto se ejecuta localmente. Imprimir entrega las páginas a la
 cola y al controlador de la impresora que elijas en el diálogo de Windows.
 Si eliges una impresora de red o un servicio de impresión externo, ese destino

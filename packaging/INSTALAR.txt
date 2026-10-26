@@ -1,8 +1,8 @@
-FARO PDF 1.4.0 - OCR local y seleccion de texto
+FARO PDF 1.5.0 - Seleccionar, cortar, copiar y pegar objetos
 Windows 10/11 de 64 bits
 
 INSTALAR
-Ejecuta FaroPDF-1.4.0-Instalar.exe. Incluye Python, Qt, PDFium y OCR en espanol e ingles.
+Ejecuta FaroPDF-1.5.0-Instalar.exe. Incluye Python, Qt, PDFium y OCR en espanol e ingles.
 Si ya tienes Faro, instala encima sin desinstalar. Esta version incorpora
 el boton Actualizar. Busca y descarga versiones diariamente mientras usas
 la app y las instala al cerrar todas sus ventanas. Puedes desactivar ambas
@@ -20,8 +20,16 @@ Clic derecho en un PDF > Abrir con > Elegir otra aplicacion > Faro PDF.
 Windows conserva tu lector actual hasta que elijas otro.
 
 PORTABLE
-Extrae TODO FaroPDF-1.4.0-Portable.zip y abre FaroPDF.exe.
+Extrae TODO FaroPDF-1.5.0-Portable.zip y abre FaroPDF.exe.
 Conserva _internal junto al ejecutable.
+
+SELECCIONAR OBJETOS
+Elige Seleccionar objetos: clic, Ctrl+clic o arrastra un recuadro.
+Arrastra los cuadros o imagenes para moverlos juntos. Ctrl+C copia,
+Ctrl+X corta, Ctrl+V pega y Supr borra. Clic derecho permite Pegar aqui.
+Los cuadros pegados conservan formato y siguen editables con doble clic.
+Ctrl+Z deshace toda la operacion. Mientras escribes, los atajos actuan
+sobre las letras. Se pueden pegar imagenes o texto de otras aplicaciones.
 
 OCR Y SELECCION
 Edicion > Reconocer texto (OCR): pagina actual, documento o rango.
