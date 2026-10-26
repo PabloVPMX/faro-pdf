@@ -1,5 +1,19 @@
 # Cambios
 
+## 1.5.1 — Copia fiel en PDF con texto trazado
+
+- La copia de imágenes y gráficos conserva los operadores y transformaciones
+  originales; evita regenerar el contenido al aislarlos. Se mantiene la comparación
+  exacta de píxeles para rechazar cambios de apariencia.
+- Selección de trazos vectoriales, agrupando contornos de letras próximos en una
+  misma línea. Permite copiar, cortar, pegar y mover esos gráficos sin sustituir
+  fuentes ni convertirlos a imágenes dentro del PDF.
+- Los recortes que afectan a otros objetos se conservan al eliminar un trazo;
+  se bloquea mover un trazo si define un recorte compartido.
+- Lectura de operandos numéricos optimizada para páginas con muchos contornos.
+- Regresión sintética con streams y matrices persistentes que reproduce el fallo
+  de la copia anterior; validación de conservación, movimiento, corte y deshacer.
+
 ## 1.5.0 — Seleccionar, cortar, copiar y pegar objetos
 
 - Modo Seleccionar objetos: imágenes y cuadros completos con clic, Ctrl+clic,

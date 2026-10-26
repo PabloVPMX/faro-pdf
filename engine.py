@@ -91,6 +91,8 @@ class Document:
         self.set_page(self.index)
 
     def close_page(self):
+        self._graphic_groups = None
+        self._graphic_hit_shapes = None
         self.objects = []
         self._character_rows = None
         self._text_runs = None

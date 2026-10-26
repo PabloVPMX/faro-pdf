@@ -26,7 +26,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.5.0'
+VERSION = '1.5.1'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -1008,7 +1008,7 @@ class Window(QMainWindow):
         self.refresh_controls()
         has_text = any(o.type == TEXT for o in self.model.objects)
         self.notice.setVisible(not has_text)
-        self.notice.setText('Para buscar y copiar texto de esta imagen: Edición → Reconocer texto (OCR).')
+        self.notice.setText('Página sin texto seleccionable: usa Seleccionar objetos para los gráficos, u OCR para buscar y copiar letras.')
         self.page_number.blockSignals(True)
         self.page_number.setRange(1, len(self.model.doc))
         self.page_number.setValue(self.model.index+1)

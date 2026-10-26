@@ -16,8 +16,8 @@ La interfaz actual está en español.
 
 Para **Windows 10/11 de 64 bits**:
 
-- [Descargar instalador de Faro PDF 1.5.0](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.5.0/FaroPDF-1.5.0-Instalar.exe)
-- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.5.0/FaroPDF-1.5.0-Portable.zip)
+- [Descargar instalador de Faro PDF 1.5.1](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.5.1/FaroPDF-1.5.1-Instalar.exe)
+- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.5.1/FaroPDF-1.5.1-Portable.zip)
 - [Ver todas las versiones y notas](https://github.com/PabloVPMX/faro-pdf/releases)
 
 El instalador incluye Python, Qt y PDFium; no hace falta instalarlos por
@@ -63,6 +63,8 @@ desactivar el antivirus. Consulta nuestra [Code signing policy](CODE_SIGNING.md)
 - Seleccionar texto nativo o reconocido y copiarlo con Ctrl+C.
 - Seleccionar imágenes y cuadros completos, arrastrarlos individualmente o en
   grupo, cortarlos, copiarlos y pegarlos en otra página o ventana de Faro.
+- Seleccionar y trasladar gráficos vectoriales, incluidos contornos de letras,
+  conservando sus formas sin buscar ni sustituir una fuente.
 - Editar texto nativo directamente en sus recuadros: seleccionar, añadir y
   borrar letras, escribir acentos e insertar saltos de línea.
 - Conservar la fuente original cuando sus recursos permiten verificar el
@@ -125,6 +127,13 @@ PDF y transparencia. También puedes pegar imágenes o texto de otras aplicacion
 Mientras escribes dentro de un cuadro, los atajos actúan sobre sus letras.
 **Seleccionar texto** sigue disponible para copiar palabras, incluido el OCR;
 el texto invisible del OCR no se trata como un cuadro editable.
+
+Algunos PDF dibujan las letras como contornos vectoriales. **Seleccionar objetos**
+agrupa los trazos próximos para copiarlos, cortarlos y moverlos como gráficos;
+un recuadro permite seleccionar otros conjuntos. Los contornos siguen siendo
+gráficos y no se editan con un cursor de texto. Para buscar o copiar sus letras
+como texto, usa **Reconocer texto (OCR)**. Las imágenes se extraen conservando
+sus transformaciones originales, incluso en páginas con varios streams de contenido.
 
 ## Reconocer escaneos y copiar texto
 

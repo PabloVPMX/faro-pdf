@@ -21,7 +21,7 @@ from fontTools.ttLib import TTFont
 from pypdf import PdfReader, PdfWriter
 from pypdf._utils import read_non_whitespace, read_until_regex
 from pypdf.generic import (
-    ArrayObject, ByteStringObject, ContentStream, DecodedStreamObject,
+    ArrayObject, ByteStringObject, ContentStream, DecodedStreamObject, FloatObject, NumberObject,
     IndirectObject, NameObject, StreamObject, TextStringObject, read_object,
 )
 import pypdfium2 as pdfium
@@ -312,9 +312,13 @@ class _Operation:
     operator: bytes
     operands: list
     spans: list
+    span: tuple = (0,0)
 
 
-def _operations(raw):
+_NUMBER_TOKEN=re.compile(rb'[+-]?(?:\d+\.\d*|\.\d+|\d+)')
+
+
+def _operations_slow(raw):
     """Use pypdf's token reader while retaining exact byte spans for operands."""
     stream = io.BytesIO(raw)
     result, operands, spans = [], [], []
@@ -328,17 +332,64 @@ def _operations(raw):
             operator = read_until_regex(stream=stream, regex=NameObject.delimiter_pattern, length=256)
             if operator == b'BI':
                 _fail('La página contiene una imagen inline; la edición de texto se mantiene bloqueada.')
-            result.append(_Operation(operator, operands, spans))
+            result.append(_Operation(operator, operands, spans, (spans[0][0] if spans else start,stream.tell())))
             operands, spans = [], []
         elif peek == b'%':
             while stream.read(1) not in (b'\r', b'\n', b''):
                 pass
         else:
-            value = read_object(stream, None)
+            # Vector outlines can contain hundreds of thousands of numeric
+            # operands. Parse ordinary PDF numbers as a single token, retaining
+            # pypdf's types and exact source spans. Complex tokens use its reader.
+            match = _NUMBER_TOKEN.match(raw,start) if peek in b'+-.0123456789' else None
+            end = match.end() if match else start
+            if match and (end==len(raw) or raw[end:end+1].isspace() or raw[end:end+1] in (b'/',b'[',b']',b'<',b'>',b'(',b')',b'%',b'\0')):
+                token=match.group();value=FloatObject(float(token)) if b'.' in token else NumberObject(int(token))
+                stream.seek(end)
+            else:value = read_object(stream, None)
             operands.append(value)
             spans.append((start, stream.tell()))
     if operands:
         _fail('El stream de contenido termina con operandos incompletos.')
+    return result
+
+
+_CONTENT_TOKEN=re.compile(
+    rb'(?P<space>[\x00\t\n\f\r ]+)|(?P<comment>%[^\r\n]*)|'
+    rb'(?P<number>[+-]?(?:\d+\.\d*|\.\d+|\d+))|'
+    rb'(?P<name>/[^\x00\t\n\f\r ()<>\[\]{}/%]*)|'
+    rb'(?P<operator>[A-Za-z][A-Za-z0-9*]*|[\'\"])')
+
+
+def _operations(raw):
+    """Tokenize simple operands in memory; delegate strings/arrays to pypdf.
+
+    Keep identical operand types and exact spans. Native editing independently
+    compares the resulting operator sequence with pypdf's content parser.
+    """
+    result=[];operands=[];spans=[];position=0;stream=None
+    while position<len(raw):
+        match=_CONTENT_TOKEN.match(raw,position)
+        if match:
+            kind=match.lastgroup;token=match.group();end=match.end()
+            if kind in ('space','comment'):position=end;continue
+            if kind=='operator':
+                if token==b'BI':_fail('La página contiene una imagen inline; la edición de texto se mantiene bloqueada.')
+                result.append(_Operation(token,operands,spans,(spans[0][0] if spans else position,end)))
+                operands=[];spans=[];position=end;continue
+            if kind=='number':
+                if end<len(raw) and raw[end] not in b'\x00\t\n\f\r /[]<>()%':return _operations_slow(raw)
+                value=FloatObject(float(token)) if b'.' in token else NumberObject(int(token))
+            elif kind=='name' and b'#' not in token and token.isascii():value=NameObject(token.decode('ascii'))
+            else:
+                if stream is None:stream=io.BytesIO(raw)
+                stream.seek(position);value=read_object(stream,None);end=stream.tell()
+        else:
+            if raw[position:position+1] not in (b'(',b'[',b'<'):return _operations_slow(raw)
+            if stream is None:stream=io.BytesIO(raw)
+            stream.seek(position);value=read_object(stream,None);end=stream.tell()
+        operands.append(value);spans.append((position,end));position=end
+    if operands:_fail('El stream de contenido termina con operandos incompletos.')
     return result
 
 

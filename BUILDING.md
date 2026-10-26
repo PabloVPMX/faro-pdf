@@ -42,8 +42,8 @@ Las herramientas de extracción quedan únicamente en la caché de compilación.
 
 Salida en `release/`:
 
-- `FaroPDF-1.5.0-Instalar.exe`
-- `FaroPDF-1.5.0-Portable.zip`
+- `FaroPDF-1.5.1-Instalar.exe`
+- `FaroPDF-1.5.1-Portable.zip`
 - `SHA256SUMS.txt`
 - Informes y ejemplo sintético de validación.
 
@@ -73,6 +73,12 @@ Las pruebas de portapapeles usan el portapapeles virtual de la plataforma Qt
 offscreen, aislado del portapapeles de Windows. Comprueban selección y arrastre
 real con eventos de ratón, Ctrl+X/C/V, grupos, fuentes incrustadas, transparencias,
 página girada, pegados repetidos, edición posterior y guardado/reapertura.
+
+También incluyen una página con letras trazadas, un logotipo sintético y matrices
+persistentes entre streams. La versión anterior rechazaba copiar esa imagen; la
+regresión verifica ahora la copia exacta, los gráficos vectoriales y su movimiento,
+corte, pegado y deshacer. Los casos reales se comprueban solo localmente y no se
+incorporan al repositorio ni al instalador.
 
 Después de compilar, también se comprueban el binario, los imports nativos
 de Qt, la instalación y desinstalación aisladas, y la actualización sobre

@@ -1,31 +1,26 @@
-**Faro PDF 1.5.0 añade selección, corte, copia y pegado de imágenes y cuadros de texto completos.**
+**Faro PDF 1.5.1 corrige la copia de imágenes en páginas con transformaciones persistentes y añade selección de contornos vectoriales.**
 
-Elige **Seleccionar objetos** en el selector de herramientas o en **Edición**.
-Selecciona con un clic, añade o quita elementos con **Ctrl+clic**, o rodea varios
-con un recuadro. Arrastra la selección para moverla, incluso si combina imágenes
-y cuadros de texto. **Ctrl+A** marca los objetos de la página actual.
+En algunos PDF, aislar un logotipo desplazaba la copia fuera de la página y Faro
+la rechazaba para conservar su apariencia. Ahora la extracción mantiene los
+operadores y transformaciones originales. Se conserva la comparación exacta de
+píxeles antes de aceptar la copia.
 
-- **Ctrl+C** copia, **Ctrl+X** corta, **Ctrl+V** pega y **Supr** borra.
-- **Clic derecho → Pegar aquí** coloca los objetos junto al cursor.
-- Pega en otra página o ventana de Faro. Cada pegado crea cuadros independientes.
-- Los cuadros propios conservan fuente, tamaño, color y líneas y siguen editables
-  con doble clic, incluso después de guardar y reabrir.
-- Puedes pegar imágenes o texto de otras aplicaciones. Dentro del editor, los
-  atajos cortan, copian y pegan letras.
-- **Ctrl+Z** deshace una operación completa, incluido el arrastre de un grupo.
+Algunos documentos dibujan sus letras como trazos. **Seleccionar objetos** permite
+seleccionarlos, copiarlos, cortarlos y moverlos como gráficos, agrupando los
+contornos próximos en una misma línea. Un recuadro permite seleccionar conjuntos.
+No se sustituye la fuente ni se rasterizan esos contornos dentro del PDF. Para
+buscar o copiar sus letras como texto, utiliza el OCR local.
 
-El copiado conserva los recursos PDF de las fuentes e imágenes. El pegado se
-anexa sin regenerar los streams originales de la página de destino. Se comprueba
-que los cambios no alteren contenido fuera de la selección. Se mantienen el OCR
-local en español e inglés, impresión, búsqueda, edición y organización de páginas.
+Se mantienen Ctrl+X/C/V, pegar aquí, el arrastre de grupos, los cuadros editables,
+imágenes, impresión, búsqueda y OCR en español e inglés. Ctrl+Z deshace la operación.
 
 ### Actualizar y descargar
 
 Si tienes Faro 1.2.0 o posterior, pulsa **Actualizar → Buscar ahora → Actualizar ahora**.
 También puedes ejecutar el instalador sobre la versión anterior sin desinstalar.
 
-- **FaroPDF-1.5.0-Instalar.exe**: instalación por usuario, dependencias y OCR incluidos.
-- **FaroPDF-1.5.0-Portable.zip**: extrae todo el ZIP y abre `FaroPDF.exe`; conserva `_internal`.
+- **FaroPDF-1.5.1-Instalar.exe**: instalación por usuario, dependencias y OCR incluidos.
+- **FaroPDF-1.5.1-Portable.zip**: extrae todo el ZIP y abre `FaroPDF.exe`; conserva `_internal`.
 - **SHA256SUMS.txt** y **verification.json**: integridad y comprobaciones de la publicación.
 
 Requiere **Windows 10/11 x64**. El instalador conserva tu elección del lector PDF

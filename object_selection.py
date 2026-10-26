@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, QPointF, QRectF, QMimeData, QByteArray
 from PySide6.QtGui import QPen, QColor, QImage
 from PySide6.QtWidgets import QApplication, QMenu
 from engine import TEXT, IMAGE, pdf
-from object_transfer import export_objects,paste_objects,mutate_objects,union,validate_change
+from object_transfer import export_objects,paste_objects,mutate_objects,union,validate_change,PATH
 
 MIME='application/x-faropdf-objects'
 MAX_CLIPBOARD=100*1024*1024
@@ -33,13 +33,20 @@ class ObjectSelection:
             result.append((indices,block['bounds'],TEXT))
         for i,obj in enumerate(model.objects):
             if obj.type==IMAGE:result.append(((i,),obj.get_bounds(),IMAGE))
+        from graphic_objects import selection_groups
+        result.extend(selection_groups(model))
         return result
 
     def hit(self,pos):
         canvas=self.window.canvas
-        options=[(kind!=TEXT,canvas.object_rect(bounds).width()*canvas.object_rect(bounds).height(),indices)
-                 for indices,bounds,kind in self.candidates()
-                 if canvas.object_rect(bounds).adjusted(-3,-3,3,3).contains(pos)]
+        options=[]
+        for indices,bounds,kind in self.candidates():
+            rect=canvas.object_rect(bounds)
+            if not rect.adjusted(-3,-3,3,3).contains(pos):continue
+            if kind==PATH and len(indices)==1 and rect.width()>40 and rect.height()>40:
+                from graphic_objects import hit_test
+                if not hit_test(self.window.model,indices[0],*canvas.to_page(pos),3/self.window.zoom):continue
+            options.append((kind!=TEXT,rect.width()*rect.height(),indices))
         return min(options)[2] if options else None
 
     def draw(self):
@@ -135,7 +142,7 @@ class ObjectSelection:
             try:
                 value=text.get_text_bounded()
                 if value:mime.setText(value)
-                if any(window.model.objects[i].type==IMAGE for group in groups for i in group):
+                if any(window.model.objects[i].type in (IMAGE,PATH) for group in groups for i in group):
                     from object_transfer import packet_bounds
                     import math
                     width,height=page.get_size()
