@@ -1,4 +1,4 @@
-**Faro PDF 1.6.1 corrige el reconocimiento de fuentes y el cierre de la aplicación.**
+**Faro PDF 1.6.2 corrige el reconocimiento de fuentes y el cierre de la aplicación.**
 
 ### Texto después de editar imágenes
 
@@ -8,14 +8,16 @@ Las fuentes CFF con subconjuntos separados pueden reutilizar sus glifos original
 
 ### Cierre completo
 
+El proceso OCR ahora espera una confirmación de inicio antes de procesar el PDF o crear un proceso Tesseract. Si cierras mientras Python o sus DLL todavía se están cargando, el arranque se cancela de forma segura sin esperar a que termine la importación y sin dejar un proceso hijo huérfano.
+
 Al cerrar con OCR, impresión o actualizaciones en curso, Faro solicita la cancelación y reintenta el cierre automáticamente cuando esas tareas terminan. No hace falta volver a pulsar la X. El cierre aceptado de la ventana principal termina el bucle de la aplicación, oculta los diálogos auxiliares, detiene temporizadores y libera el documento. Se conserva la confirmación de cambios sin guardar. Si un texto no se puede aplicar, es posible descartarlo explícitamente para continuar o cerrar.
 
 ### Actualizar
 
 **Actualizar → Buscar ahora → Actualizar ahora**, o ejecuta el instalador sobre la versión anterior.
 
-- **FaroPDF-1.6.1-Instalar.exe**: instalación por usuario, dependencias y OCR incluidos.
-- **FaroPDF-1.6.1-Portable.zip**: extrae todo el ZIP y conserva _internal junto a FaroPDF.exe.
+- **FaroPDF-1.6.2-Instalar.exe**: instalación por usuario, dependencias y OCR incluidos.
+- **FaroPDF-1.6.2-Portable.zip**: extrae todo el ZIP y conserva _internal junto a FaroPDF.exe.
 - **SHA256SUMS.txt** y **verification.json**: integridad y resultados de las comprobaciones.
 
 Windows 10/11 x64. Los ejecutables continúan sin firma digital. SignPath Foundation rechazó la solicitud inicial por visibilidad pública insuficiente; la edición MSIX para Microsoft Store sigue en evaluación y todavía no está publicada. No se modifican las protecciones de Windows.

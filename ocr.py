@@ -22,6 +22,7 @@ class OCRController(QObject):
         self.buffer = b''
         self.terminal = None
         self.result_dialog=None
+        self.ready_ack=False
 
     @property
     def busy(self):
@@ -87,15 +88,17 @@ class OCRController(QObject):
         (self.work / 'input.pdf').write_bytes(self.model._data)
         job = dict(input=str(self.work / 'input.pdf'), output=str(self.work / 'output.pdf'),
                    work=str(self.work / 'pages'), cancel=str(self.work / 'cancel'),
+                   start=str(self.work/'start'),
                    pages=list(pages), language=language)
         job_path = self.work / 'job.json'; job_path.write_text(json.dumps(job), encoding='utf-8')
-        self.cancelled = False; self.buffer = b''; self.terminal = None; self.last_summary = None
+        self.cancelled = False; self.buffer = b''; self.terminal = None; self.last_summary = None;self.ready_ack=False
         self.progress = QProgressDialog('Preparando reconocimiento local…', 'Cancelar', 0, len(pages), window)
         self.progress.setWindowTitle('Reconocer texto (OCR)')
         self.progress.setWindowModality(Qt.WindowModality.WindowModal)
         self.progress.setMinimumDuration(0); self.progress.setAutoClose(False); self.progress.setAutoReset(False)
         self.progress.canceled.connect(self.cancel)
         process = self.process = QProcess(self)
+        process.started.connect(self.process_started)
         process.readyReadStandardOutput.connect(self.read_output)
         # Drain stderr without retaining document content or unbounded logs.
         process.readyReadStandardError.connect(lambda: process.readAllStandardError())
@@ -107,6 +110,9 @@ class OCRController(QObject):
         self.progress.show()
         return True
 
+    def process_started(self):
+        if self.cancelled and not self.ready_ack and self.process:self.process.kill()
+
     def read_output(self):
         if not self.process: return
         self.buffer += bytes(self.process.readAllStandardOutput())
@@ -114,7 +120,14 @@ class OCRController(QObject):
             line, self.buffer = self.buffer.split(b'\n', 1)
             try: record = json.loads(line)
             except (ValueError, UnicodeError): continue
-            if record.get('kind') == 'progress' and self.progress and not self.cancelled:
+            if record.get('kind')=='ready':
+                if self.cancelled:
+                    if self.process:self.process.kill()
+                else:
+                    # Only this acknowledgement lets the worker read/process
+                    # the PDF or create a Tesseract child.
+                    self.ready_ack=True;(self.work/'start').touch()
+            elif record.get('kind') == 'progress' and self.progress and not self.cancelled:
                 self.progress.setLabelText(f'Reconociendo página {record["page"]}…\nLos documentos permanecen en tu equipo.')
                 self.progress.setValue(record['done'])
             else: self.terminal = record
@@ -123,6 +136,9 @@ class OCRController(QObject):
         if not self.busy: return
         self.cancelled = True
         (self.work / 'cancel').touch()
+        # Before the acknowledgement no descendant processes can exist. Abort
+        # slow Python/DLL startup immediately; never orphan a Tesseract child.
+        if not self.ready_ack:self.process.kill()
         if self.progress:
             self.progress.setLabelText('Cancelando reconocimiento…')
             self.progress.setCancelButton(None)

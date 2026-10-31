@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.6.2 — Cancelación durante el arranque del OCR
+
+- El proceso OCR necesita una confirmación de inicio del lector antes de procesar el PDF o crear un hijo Tesseract. Se puede terminar de forma segura un arranque cancelado sin dejar procesos hijos.
+- El cierre se prueba también de forma inmediata, antes de que el trabajador confirme que está listo, cubriendo arranques lentos de Python o DLLs.
+- Conserva los arreglos de fuentes CFF, estilos Standard-14 y cierre completo de 1.6.1.
+
 ## 1.6.1 — Fuentes originales y cierre completo
 
 - Reconoce Times-Bold, Times-Italic y variantes PostScript, respetando negrita/cursiva al volver de editar imágenes.

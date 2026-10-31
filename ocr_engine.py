@@ -200,6 +200,17 @@ def recognize(data, pages, language, work, cancel=None, progress=None, runtime=N
 def worker_main(job_path):
     try:
         job = json.loads(Path(job_path).read_text(encoding='utf-8'))
+        check_cancel(job['cancel'])
+        if job.get('start'):
+            # Heavy imports happen before the ready/start handshake. The GUI
+            # can safely kill a cancelled startup: no child can exist yet.
+            import pypdfium2
+            import pypdf
+            check_cancel(job['cancel'])
+            emit(kind='ready')
+            while not Path(job['start']).exists():
+                check_cancel(job['cancel']);time.sleep(.02)
+        check_cancel(job['cancel'])
         data, summary = recognize(Path(job['input']).read_bytes(), job['pages'], job['language'],
                                   job['work'], job['cancel'], progress=lambda **p: emit(kind='progress', **p))
         check_cancel(job['cancel'])
