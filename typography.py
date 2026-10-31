@@ -20,6 +20,12 @@ def key(name):
     return re.sub('[^a-z0-9]', '', clean_name(name).lower())
 
 
+def font_style(name,bold=False,italic=False):
+    value=key(name)
+    return (bold or 'bold' in value,
+            italic or 'italic' in value or 'oblique' in value)
+
+
 @dataclass(frozen=True)
 class Face:
     family: str
@@ -109,12 +115,13 @@ class Catalog:
         return face
 
     def matching(self, name, bold=False, italic=False):
+        bold,italic=font_style(name,bold,italic)
         wanted = key(name)
         # PDF Standard 14 families have Windows metric-compatible counterparts.
-        alias = {'helvetica': 'arial', 'timesroman': 'timesnewroman', 'courier': 'couriernew'}
+        alias = {'helvetica': 'arial', 'timesroman': 'timesnewroman', 'times':'timesnewroman', 'courier': 'couriernew'}
         normalized = wanted
         for _ in range(3):
-            normalized = re.sub('(bolditalic|boldoblique|bold|italic|oblique|regular|psmt|mt)$', '', normalized)
+            normalized = re.sub('(bolditalic|boldoblique|bold|italic|oblique|regular|psmt|mt|ps)$', '', normalized)
         wanted = alias.get(normalized, normalized)
         matches = [f for f in self.faces if key(f.family) == wanted or key(f.name) == key(name)
                    or re.sub('(bolditalic|bold|italic|regular)$', '', key(f.name)) == wanted]

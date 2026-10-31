@@ -7,7 +7,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $target '_internal') | Out-
 # Stale files must be removed on upgrade, not merely omitted from the new ZIP.
 [IO.File]::WriteAllText((Join-Path $target '_internal\icuuc.dll'),'obsolete test fixture')
 [IO.File]::WriteAllText((Join-Path $target '_internal\api-ms-win-core-test.dll'),'obsolete test fixture')
-$setup=Join-Path $projectRoot 'release\FaroPDF-1.6.0-Instalar.exe'
+$setup=Join-Path $projectRoot 'release\FaroPDF-1.6.1-Instalar.exe'
 $process=Start-Process -FilePath $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS','/VALIDATION=1',('/DIR="'+$target+'"')) -WindowStyle Hidden -Wait -PassThru
 if ($process.ExitCode -ne 0) { throw 'Fallo instalador aislado.' }
 try {

@@ -37,6 +37,12 @@ def _extend_missing(data,page_index,ordinal,missing):
         elif op.operator==b'Q':name=names.pop()
         elif op.operator==b'Tf':name=op.operands[0]
     font=reader.pages[page_index]['/Resources']['/Font'][name].get_object()
+    descendant=font.get('/DescendantFonts',[font])[0].get_object()
+    descriptor=descendant.get('/FontDescriptor',{})
+    descriptor=descriptor.get_object() if hasattr(descriptor,'get_object') else descriptor
+    if '/FontFile3' in descriptor:
+        from cff_extension import extend_cff
+        return extend_cff(data,page_index,ordinal,missing)
     if font.get('/Subtype')!='/Type0' or font.get('/Encoding')!='/Identity-H':
         raise UnsupportedNativePatch('Ampliar esta fuente requiere un mapa CID TrueType Identity-H.')
     descendant=font['/DescendantFonts'][0].get_object()

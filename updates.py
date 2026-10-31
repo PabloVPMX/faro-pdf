@@ -222,6 +222,7 @@ class UpdateController(QObject):
 
     def cancelled_close(self):
         self.force_install = False
+        self.close_when_idle=False
 
     def before_close(self):
         if not self.ready or not self.installed or not (self.force_install or self.option('auto_install')):

@@ -1,30 +1,25 @@
-**Faro PDF 1.6.0 añade selección libre por área y corrige los encabezados agrupados que no se podían seleccionar.**
+**Faro PDF 1.6.1 corrige el reconocimiento de fuentes y el cierre de la aplicación.**
 
-### Seleccionar y recortar
+### Texto después de editar imágenes
 
-- **Edición → Girar página**: 90° a derecha/izquierda o 180°. Se guarda en el PDF y admite Deshacer; las otras páginas conservan su orientación.
+Se reconocen correctamente Times-Bold, Times-Italic y nombres PostScript equivalentes. La negrita y cursiva se conservan. El cambio de modo no sustituye las fuentes del PDF.
 
-- **Seleccionar objetos** reconoce grupos Form, incluidos encabezados con texto, logotipos y transparencia. Puedes copiarlos, cortarlos y moverlos manteniendo sus recursos PDF y apariencia.
-- **Seleccionar área (imagen)** permite rodear cualquier parte del documento con un rectángulo, aunque atraviese un objeto. **Ctrl+C** copia, **Ctrl+X** recorta visualmente y **Ctrl+V** pega como imagen que puedes mover y redimensionar.
-- La copia de área usa 300 ppp, limitada a 20 millones de píxeles por página. Solo el fragmento se convierte en imagen; el resto conserva su contenido original. **Ctrl+Z** recupera el recorte.
-- Cortar área es un recorte visual, no una herramienta de censura segura. Se rechazan áreas que intersectan anotaciones o campos de formulario para no dejar apariencias inconsistentes.
+Las fuentes CFF con subconjuntos separados pueden reutilizar sus glifos originales presentes en el documento para añadir palabras y acentos. Se verifican los contornos y métricas conservados y se exige que las páginas originales sigan viéndose igual antes de aplicar la edición. Si un carácter no está incluido en ningún subconjunto disponible de esa cara, sigue siendo necesaria la fuente original completa o una alternativa elegida explícitamente; no se inventan glifos ni se selecciona una fuente parecida automáticamente.
 
-### Resultado visible del OCR
+### Cierre completo
 
-El OCR conserva el aspecto original y añade letras que permiten buscar con **Ctrl+F** y copiar con **Seleccionar texto**. Ahora muestra un resultado con texto disponible, páginas reconocidas y páginas omitidas porque ya contenían texto. No reconstruye la fuente original ni convierte escaneos en cuadros editables. Revisa los datos reconocidos, especialmente nombres y cantidades.
+Al cerrar con OCR, impresión o actualizaciones en curso, Faro solicita la cancelación y reintenta el cierre automáticamente cuando esas tareas terminan. No hace falta volver a pulsar la X. El cierre aceptado de la ventana principal termina el bucle de la aplicación, oculta los diálogos auxiliares, detiene temporizadores y libera el documento. Se conserva la confirmación de cambios sin guardar. Si un texto no se puede aplicar, es posible descartarlo explícitamente para continuar o cerrar.
 
 ### Actualizar
 
-Pulsa **Actualizar → Buscar ahora → Actualizar ahora**. También puedes ejecutar el nuevo instalador sobre la versión anterior, sin desinstalar.
+**Actualizar → Buscar ahora → Actualizar ahora**, o ejecuta el instalador sobre la versión anterior.
 
-- **FaroPDF-1.6.0-Instalar.exe**: instalación por usuario, dependencias y OCR incluidos.
-- **FaroPDF-1.6.0-Portable.zip**: extrae todo el ZIP y abre FaroPDF.exe; conserva _internal.
-- **SHA256SUMS.txt** y **verification.json**: integridad y comprobaciones de la publicación.
+- **FaroPDF-1.6.1-Instalar.exe**: instalación por usuario, dependencias y OCR incluidos.
+- **FaroPDF-1.6.1-Portable.zip**: extrae todo el ZIP y conserva _internal junto a FaroPDF.exe.
+- **SHA256SUMS.txt** y **verification.json**: integridad y resultados de las comprobaciones.
 
-Windows 10/11 x64. El instalador conserva la elección del lector predeterminado. Los documentos se procesan en tu equipo y no se publican. Los ejecutables siguen sin firma digital; la solicitud a SignPath está pendiente.
+Windows 10/11 x64. Los ejecutables continúan sin firma digital. SignPath Foundation rechazó la solicitud inicial por visibilidad pública insuficiente; la edición MSIX para Microsoft Store sigue en evaluación y todavía no está publicada. No se modifican las protecciones de Windows.
 
-### Verificación y límites
+### Verificación
 
-Se comprueban código, ejecutable, imports nativos e instalación/desinstalación aisladas. Las pruebas incluyen Form con transparencia, copia/corte/movimiento, áreas parciales, cuatro rotaciones y recortes desplazados, portapapeles, píxeles fuera del área, Deshacer y originales intactos, además de todas las regresiones anteriores de texto, imágenes, impresión, búsqueda y OCR real. Las pruebas públicas usan únicamente documentos sintéticos.
-
-No se incluyen firmas de documentos, PDF con contraseña ni recomposición automática de párrafos. El guardado incremental y los recortes no eliminan de forma segura datos confidenciales. El código original de Faro es MIT; las dependencias conservan sus licencias.
+Pruebas sintéticas de estilos Standard-14, transición de imágenes a texto, ampliación CFF con acentos y otras páginas intactas, guardado/reapertura, deshacer y descarte explícito. Los procesos de prueba deben terminar realmente después de cerrar con diálogos, OCR y actualizaciones activos. Se mantienen las regresiones de edición, gráficos, áreas, rotación, impresión, búsqueda y OCR local. El código, ejecutable, imports nativos e instalación/desinstalación se verifican antes de publicar. No se incluyen documentos personales.

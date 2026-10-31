@@ -22,7 +22,7 @@ from pypdf import PdfReader, PdfWriter
 from pypdf._utils import read_non_whitespace, read_until_regex
 from pypdf.generic import (
     ArrayObject, ByteStringObject, ContentStream, DecodedStreamObject, FloatObject, NumberObject,
-    IndirectObject, NameObject, StreamObject, TextStringObject, read_object,
+    IndirectObject, NameObject, StreamObject, TextStringObject, read_object,DictionaryObject,
 )
 import pypdfium2 as pdfium
 
@@ -147,18 +147,36 @@ class _Font:
             from fontTools.encodings.StandardEncoding import StandardEncoding
             cff=CFFFontSet();cff.decompile(io.BytesIO(cff_stream.get_object().get_data()),None)
             top=cff.topDictIndex[0];self.glyph_count=len(top.charset)
-            if subtype=='/Type1' and '/ToUnicode' not in font:
+            if subtype=='/Type1':
                 encoding=getattr(top,'Encoding','StandardEncoding')
                 if encoding=='StandardEncoding':encoding=StandardEncoding
                 if '/Encoding' in font:
                     from pypdf._codecs import charset_encoding
                     supplied=font['/Encoding']
-                    if not isinstance(supplied,str) or supplied not in charset_encoding:_fail('Codificación CFF personalizada no compatible.')
-                    decoded=charset_encoding[supplied]
-                    self.mapping={bytes([i]):c for i,c in enumerate(decoded) if len(c)==1 and c.isprintable()}
+                    if isinstance(supplied,DictionaryObject):
+                        base=supplied.get('/BaseEncoding','/StandardEncoding')
+                        if base not in charset_encoding:_fail('Codificación base CFF no compatible.')
+                        # Resolve glyph names before accepting PDF Differences.
+                        from fontTools.agl import UV2AGL
+                        encoding=[UV2AGL.get(ord(c),'.notdef') if len(c)==1 else '.notdef' for c in charset_encoding[base]]
+                        code=0
+                        for item in supplied.get('/Differences',[]):
+                            if isinstance(item,NameObject):
+                                if not 0<=code<256:_fail('Diferencias CFF fuera de rango.')
+                                encoding[code]=str(item).lstrip('/');code+=1
+                            else:code=int(item)
+                        self.mapping={bytes([i]):toUnicode(n) for i,n in enumerate(encoding) if n in top.charset and len(toUnicode(n))==1}
+                    else:
+                        if not isinstance(supplied,str) or supplied not in charset_encoding:_fail('Codificación CFF personalizada no compatible.')
+                        decoded=charset_encoding[supplied]
+                        self.mapping={bytes([i]):c for i,c in enumerate(decoded) if len(c)==1 and c.isprintable()}
                 else:
                     self.mapping={bytes([i]):toUnicode(n) for i,n in enumerate(encoding) if n in top.charset and len(toUnicode(n))==1}
                 self.width=1;self.cff_codes={int.from_bytes(c,'big') for c in self.mapping}
+                if '/ToUnicode' in font:
+                    mapping=_unicode_map(font,1)
+                    if any(int.from_bytes(c,'big') not in self.cff_codes for c in mapping):_fail('El mapa Unicode CFF apunta a un glifo ausente.')
+                    self.mapping=mapping
                 self.advances={int(font.get('/FirstChar',0))+i:float(v) for i,v in enumerate(font.get('/Widths',[]))}
             elif subtype=='/Type0' and descriptor_font.get('/Subtype')=='/CIDFontType0' and font.get('/Encoding')=='/Identity-H':
                 self.mapping=_unicode_map(font,2)

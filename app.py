@@ -10,7 +10,7 @@ if __name__ == '__main__' and len(sys.argv) == 3 and sys.argv[1] == '--ocr-worke
     from ocr_engine import worker_main
     sys.exit(worker_main(sys.argv[2]))
 
-from PySide6.QtCore import Qt, QRectF, QSize, QTimer, QPointF
+from PySide6.QtCore import Qt, QRectF, QSize, QTimer, QPointF,Signal
 from PySide6.QtGui import QAction, QImage, QPixmap, QPen, QColor, QKeySequence, QIcon, QFontDatabase, QFont, QActionGroup, QTransform
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -26,7 +26,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.6.0'
+VERSION = '1.6.1'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -553,6 +553,7 @@ class Canvas(QGraphicsView):
 
 
 class Window(QMainWindow):
+    closed=Signal()
     def __init__(self, updates_enabled=True):
         super().__init__()
         self.model = None
@@ -560,6 +561,11 @@ class Window(QMainWindow):
         self.mode = 'read'
         self.zoom = 1.0
         self.fit = True
+        self._closed=False
+        self._close_requested=False
+        self._close_retry=QTimer(self)
+        self._close_retry.setInterval(100)
+        self._close_retry.timeout.connect(self._retry_close)
         self.setWindowTitle('Faro PDF')
         self.resize(1360, 900)
         self.setMinimumSize(880, 520)
@@ -930,7 +936,12 @@ class Window(QMainWindow):
 
     def confirm_discard(self):
         if self.inline.active and not self.inline.commit():
-            return False
+            choice=QMessageBox.question(self,'Edición sin aplicar',
+                'No se pudo aplicar la edición de texto. ¿Descartar ese texto sin aplicar y continuar?',
+                QMessageBox.StandardButton.Discard|QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel)
+            if choice!=QMessageBox.StandardButton.Discard:return False
+            self.inline.cancel()
         if not self.model or not self.model.dirty:
             return True
         choice = QMessageBox.question(self, 'Cambios sin guardar', 'Hay cambios sin guardar. ¿Quieres guardarlos antes de continuar?',
@@ -1286,32 +1297,56 @@ class Window(QMainWindow):
             QTimer.singleShot(0, self.render_page)
 
     def closeEvent(self, event):
+        if self._closed:event.accept();return
+        self._close_requested=True
         if self.ocr.busy:
             self.ocr.cancel()
-            self.statusBar().showMessage('Cancelando OCR. Vuelve a cerrar cuando termine.', 8000)
+            self.statusBar().showMessage('Cancelando OCR para cerrar Faro…', 8000)
+            self._close_retry.start()
             event.ignore()
             return
         if self.printing.busy:
+            self.printing.cancel()
+            self._close_retry.start()
             event.ignore()
             return
         if any(worker.isRunning() for worker in self.inline.workers):
             self.statusBar().showMessage('Espera a que termine el reconocimiento local antes de cerrar.', 8000)
             event.ignore()
+            self._close_retry.start()
             return
         if self.updates.wait_before_close():
             event.ignore()
+            self._close_retry.start()
             return
         if self.confirm_discard():
             if not self.updates.before_close():
+                self._close_requested=False;self._close_retry.stop()
                 event.ignore()
                 return
             self.search.stop()
+            self.inline._clear()
+            self.document_view.timer.stop()
+            self.updates.timer.stop()
+            self._close_retry.stop()
+            self._closed=True
+            # Tool/modeless dialogs do not own the lifetime of the reader.
+            for dialog in self.findChildren(QDialog):dialog.hide()
             if self.model:
                 self.model.close()
+                self.model=None
             event.accept()
+            self.closed.emit()
         else:
+            self._close_requested=False;self._close_retry.stop()
             self.updates.cancelled_close()
             event.ignore()
+
+    def _retry_close(self):
+        if not self._close_requested or self._closed:self._close_retry.stop();return
+        if self.ocr.busy or self.printing.busy or self.updates.worker:return
+        if any(worker.isRunning() for worker in self.inline.workers):return
+        self._close_retry.stop();self.close()
 
     def font_report(self):
         if not self.model:
@@ -1371,7 +1406,11 @@ def main():
     parser.add_argument('--screenshot')
     parser.add_argument('--edit-object', type=int)
     parser.add_argument('--self-test', metavar='REPORT', help=argparse.SUPPRESS)
+    parser.add_argument('--close-probe',nargs=2,help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.close_probe:
+        from font_lifecycle_checks import close_probe
+        return close_probe(*args.close_probe)
     if args.self_test:
         from packaging_smoke import run
         return run(Path(args.self_test))
@@ -1390,6 +1429,9 @@ def main():
     app.setStyle('Fusion')
     app.setStyleSheet(STYLE)
     window = Window(updates_enabled=not bool(args.screenshot))
+    # Exit after the main window accepts close even if a hidden auxiliary
+    # dialog exists. Closing another process/window is never required.
+    window.closed.connect(app.quit,Qt.ConnectionType.QueuedConnection)
     if args.screenshot:
         window.show()
     else:

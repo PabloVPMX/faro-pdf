@@ -155,6 +155,10 @@ class Document:
             data['weight'] = font.get_weight()
             data['subset'] = bool(re.match(r'^[A-Z]{6}\+', data['font']))
             data['italic'] = bool(pdf.raw.FPDFFont_GetFlags(font) & 64)
+            from typography import font_style
+            bold,italic=font_style(data['font'],data['weight']>=600,data['italic'])
+            if bold:data['weight']=max(700,data['weight'])
+            data['italic']=italic
             data['matrix'] = obj.get_matrix().get()
             color = [C.c_uint() for _ in range(4)]
             if pdf.raw.FPDFPageObj_GetFillColor(obj, *[C.byref(v) for v in color]):

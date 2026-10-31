@@ -97,6 +97,10 @@ class PrintController:
     def __init__(self, window):
         self.window = window
         self.busy = False
+        self.cancel_requested=False
+
+    def cancel(self):
+        self.cancel_requested=True
 
     def prepare(self):
         if self.busy or not self.window.model:
@@ -130,6 +134,7 @@ class PrintController:
 
     def paint(self,data,printer,pages,preview=False):
         self.busy=True
+        self.cancel_requested=False
         progress=QProgressDialog('Preparando páginas…','Cancelar',0,len(pages),self.window)
         progress.setWindowTitle('Imprimir PDF'); progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.setMinimumDuration(400)
@@ -137,7 +142,7 @@ class PrintController:
             def advance(done,total):
                 progress.setMaximum(total);progress.setValue(done)
                 QApplication.processEvents()
-            printed=paint_document(data,printer,pages,progress.wasCanceled,advance)
+            printed=paint_document(data,printer,pages,lambda:self.cancel_requested or progress.wasCanceled(),advance)
             self.window.statusBar().showMessage('Vista previa actualizada.' if preview else
                 f'Se enviaron {len(printed)} páginas a la impresora seleccionada.',10000)
         except PrintCancelled:

@@ -1,5 +1,13 @@
 # Cambios
 
+## 1.6.1 — Fuentes originales y cierre completo
+
+- Reconoce Times-Bold, Times-Italic y variantes PostScript, respetando negrita/cursiva al volver de editar imágenes.
+- Amplía codificaciones CFF Type1/Identity-H reutilizando glifos originales de subconjuntos de la misma cara presentes en el PDF. Verifica contornos, métricas y apariencia de todas las páginas antes de editar.
+- Cancela tareas y vuelve a intentar el cierre automáticamente; el cierre aceptado de la ventana principal termina el bucle de la aplicación aunque existan diálogos auxiliares. Detiene temporizadores y libera el PDF.
+- Una edición no aplicable se puede descartar explícitamente, sin impedir salir de la aplicación.
+- Regresiones sintéticas para imagen→texto, palabras/acentos CFF, guardado/reapertura y salida real de procesos con diálogos, OCR y actualizaciones.
+
 ## 1.6.0 — Áreas y encabezados agrupados
 
 - Girar la página actual 90° a derecha/izquierda o 180°, con guardado y Deshacer.
