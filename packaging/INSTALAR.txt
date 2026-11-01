@@ -1,11 +1,12 @@
-FARO PDF 1.6.2 - Corrección de fuentes y cierre de procesos
+FARO PDF 1.6.3 - Cierre y actualizaciones coordinados
 Windows 10/11 de 64 bits
 
 INSTALAR
-Ejecuta FaroPDF-1.6.2-Instalar.exe. Incluye Python, Qt, PDFium y OCR en espanol e ingles.
-Si ya tienes Faro, instala encima sin desinstalar. Esta version incorpora
-el boton Actualizar. Busca y descarga versiones diariamente mientras usas
-la app y las instala al cerrar todas sus ventanas. Puedes desactivar ambas
+Ejecuta FaroPDF-1.6.3-Instalar.exe. Incluye Python, Qt, PDFium y OCR en espanol e ingles.
+Si ya tienes Faro, cierra sus ventanas e instala encima sin desinstalar.
+Espera a que termine el instalador antes de volver a abrir Faro.
+El boton Actualizar busca y descarga versiones diariamente mientras usas
+la app y las instala cuando todos sus procesos han terminado. Puedes desactivar ambas
 opciones desde Actualizar. Tus documentos no se envian a GitHub.
 Ctrl+P abre el dialogo de impresion de Windows; Archivo permite ver la
 vista previa. Ctrl+F busca texto en todas las paginas; F3 avanza y
@@ -20,7 +21,7 @@ Clic derecho en un PDF > Abrir con > Elegir otra aplicacion > Faro PDF.
 Windows conserva tu lector actual hasta que elijas otro.
 
 PORTABLE
-Extrae TODO FaroPDF-1.6.2-Portable.zip y abre FaroPDF.exe.
+Extrae TODO FaroPDF-1.6.3-Portable.zip y abre FaroPDF.exe.
 Conserva _internal junto al ejecutable.
 
 SELECCIONAR OBJETOS

@@ -1,5 +1,13 @@
 # Cambios
 
+## 1.6.3 — Actualizaciones después del cierre real
+
+- El actualizador espera a que termine el proceso completo antes de reemplazar el ejecutable o sus DLL. Un coordinador independiente de Python/Qt verifica otra vez la suma SHA-256 y espera la salida del instalador antes de reabrir Faro.
+- Un bloqueo entre procesos evita actualizaciones simultáneas y pospone nuevos arranques mientras se instala. Los PDF solicitados durante ese intervalo se abren al terminar correctamente.
+- La actualización muestra progreso. Si falla, conserva un resultado consultable desde Actualizaciones; no abre automáticamente una instalación incompleta.
+- El instalador comprueba que el lector haya terminado antes de escribir archivos. Conserva la confirmación de cambios sin guardar y no finaliza otras ventanas.
+- Se añaden pruebas del coordinador real y de apertura maximizada/cierre con la plataforma nativa de Windows, tanto desde código como con el ejecutable portátil e instalado.
+
 ## 1.6.2 — Cancelación durante el arranque del OCR
 
 - El proceso OCR necesita una confirmación de inicio del lector antes de procesar el PDF o crear un hijo Tesseract. Se puede terminar de forma segura un arranque cancelado sin dejar procesos hijos.

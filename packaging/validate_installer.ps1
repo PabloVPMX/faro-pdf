@@ -7,7 +7,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $target '_internal') | Out-
 # Stale files must be removed on upgrade, not merely omitted from the new ZIP.
 [IO.File]::WriteAllText((Join-Path $target '_internal\icuuc.dll'),'obsolete test fixture')
 [IO.File]::WriteAllText((Join-Path $target '_internal\api-ms-win-core-test.dll'),'obsolete test fixture')
-$setup=Join-Path $projectRoot 'release\FaroPDF-1.6.2-Instalar.exe'
+$setup=Join-Path $projectRoot 'release\FaroPDF-1.6.3-Instalar.exe'
 $process=Start-Process -FilePath $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS','/VALIDATION=1',('/DIR="'+$target+'"')) -WindowStyle Hidden -Wait -PassThru
 if ($process.ExitCode -ne 0) { throw 'Fallo instalador aislado.' }
 try {
@@ -18,6 +18,10 @@ try {
     if ($run.ExitCode -ne 0) { throw 'Fallo prueba del ejecutable instalado.' }
     $result=Get-Content -LiteralPath $report -Raw|ConvertFrom-Json
     if (-not $result.passed -or -not $result.frozen) { throw 'El ejecutable instalado no paso.' }
+    $pythonExe=Join-Path $projectRoot '.venv\Scripts\python.exe'
+    if (-not (Test-Path -LiteralPath $pythonExe)) { $pythonExe=(Get-Command python.exe -ErrorAction Stop).Source }
+    & $pythonExe (Join-Path $PSScriptRoot 'validate_lifecycle.py') (Join-Path $projectRoot '.cache\validation\lifecycle-installed.json') (Join-Path $target 'FaroPDF.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Fallo cierre nativo del ejecutable instalado.' }
     [ordered]@{passed=$true;obsolete_dll_cleanup=$true;installed_engine=$result}|ConvertTo-Json -Depth 6|Set-Content -LiteralPath (Join-Path $projectRoot '.cache\validation\installer.json') -Encoding UTF8
 } finally {
     $uninstall=Join-Path $target 'unins000.exe'

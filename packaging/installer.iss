@@ -1,4 +1,4 @@
-#define AppVersion "1.6.2"
+#define AppVersion "1.6.3"
 [Setup]
 AppId={{FC19C06D-689C-4C3F-ACAA-11E80B6EE439}
 AppName=Faro PDF
@@ -19,8 +19,11 @@ SolidCompression=yes
 WizardStyle=modern
 ChangesAssociations=yes
 CloseApplications=yes
+; Checked before any files are replaced, including native DLL teardown.
+AppMutex=Local\FaroPDF.Reader
+SetupMutex=Local\FaroPDF.Installer
 DisableProgramGroupPage=yes
-VersionInfoVersion=1.6.2.0
+VersionInfoVersion=1.6.3.0
 CreateUninstallRegKey=not ValidationMode
 InfoAfterFile=INSTALAR.txt
 
@@ -61,13 +64,37 @@ Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueN
 
 [Run]
 Filename: "{app}\FaroPDF.exe"; Description: "Abrir Faro PDF"; Flags: nowait postinstall skipifsilent
-Filename: "{app}\FaroPDF.exe"; Flags: nowait skipifnotsilent; Check: ReopenAfterUpdate
 Filename: "ms-settings:defaultapps"; Description: "Elegir la aplicacion predeterminada para PDF en Windows"; Flags: shellexec nowait postinstall skipifsilent unchecked
 
 [Code]
-function ReopenAfterUpdate: Boolean;
+var
+  UpdateGate: THandle;
+
+function FaroCreateMutex(lpMutexAttributes: Integer; bInitialOwner: Boolean; lpName: String): THandle;
+  external 'CreateMutexW@kernel32.dll stdcall';
+function FaroCloseHandle(hObject: THandle): Boolean;
+  external 'CloseHandle@kernel32.dll stdcall';
+
+function InitializeSetup: Boolean;
 begin
-  Result := ExpandConstant('{param:FAROREOPEN|0}') = '1';
+  UpdateGate := FaroCreateMutex(0, False, 'Local\FaroPDF.Update');
+  Result := UpdateGate <> 0;
+end;
+
+procedure DeinitializeSetup;
+begin
+  if UpdateGate <> 0 then FaroCloseHandle(UpdateGate);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  { The ordinary install wizard may launch Faro on its final page. All file
+    replacement is finished at ssPostInstall; automated upgrades still hold
+    their independent helper gate until the setup process exits. }
+  if (CurStep = ssPostInstall) and (UpdateGate <> 0) then begin
+    FaroCloseHandle(UpdateGate);
+    UpdateGate := 0;
+  end;
 end;
 
 function ValidationMode: Boolean;

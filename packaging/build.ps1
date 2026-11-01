@@ -11,8 +11,10 @@ function Invoke-Python([string[]]$PythonArguments) {
 
 Invoke-Python -PythonArguments @('packaging\prepare_ocr.py')
 Invoke-Python -PythonArguments @('packaging\make_assets.py')
+Invoke-Python -PythonArguments @('packaging\validate_update_handoff.py','--report','.cache\validation\update-handoff.json')
 Invoke-Python -PythonArguments @('app.py','--self-test','.cache\validation\source.json')
 if (-not ((Get-Content .cache\validation\source.json -Raw | ConvertFrom-Json).passed)) { throw 'Fallo prueba del codigo.' }
+Invoke-Python -PythonArguments @('packaging\validate_lifecycle.py','.cache\validation\lifecycle-source.json',$pythonExe,'app.py')
 Invoke-Python -PythonArguments @('-m','PyInstaller','--noconfirm','--distpath','dist','--workpath','.cache\build','packaging\FaroPDF.spec')
 
 $frozenReport=Join-Path $projectRoot '.cache\validation\frozen.json'
@@ -20,6 +22,8 @@ $frozenProcess=Start-Process -FilePath (Join-Path $projectRoot 'dist\FaroPDF\Far
 if ($frozenProcess.ExitCode -ne 0) { throw 'Fallo ejecutable empaquetado.' }
 $frozenResult=Get-Content -LiteralPath $frozenReport -Raw | ConvertFrom-Json
 if (-not $frozenResult.passed -or -not $frozenResult.frozen) { throw 'No paso la prueba del ejecutable.' }
+Invoke-Python -PythonArguments @('packaging\validate_update_handoff.py','--report','.cache\validation\update-handoff-frozen.json',(Join-Path $projectRoot 'dist\FaroPDF\FaroPDF.exe'))
+Invoke-Python -PythonArguments @('packaging\validate_lifecycle.py','.cache\validation\lifecycle-frozen.json',(Join-Path $projectRoot 'dist\FaroPDF\FaroPDF.exe'))
 Invoke-Python -PythonArguments @('packaging\validate_native.py')
 
 $compilerDir=Join-Path $projectRoot '.cache\tools\InnoSetup'
@@ -38,5 +42,5 @@ if (-not (Test-Path -LiteralPath $compiler)) {
 & $compiler (Join-Path $PSScriptRoot 'installer.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Fallo compilacion del instalador.' }
 & (Join-Path $PSScriptRoot 'validate_installer.ps1')
-Compress-Archive -Path dist\FaroPDF\* -DestinationPath release\FaroPDF-1.6.2-Portable.zip -Force
+Compress-Archive -Path dist\FaroPDF\* -DestinationPath release\FaroPDF-1.6.3-Portable.zip -Force
 Invoke-Python -PythonArguments @('packaging\release_manifest.py')

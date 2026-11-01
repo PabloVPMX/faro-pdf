@@ -6,9 +6,28 @@ import json
 from pathlib import Path
 import threading
 import time
+import sys
 from unittest.mock import patch
 
 import update_service as service
+
+
+def handoff_parent(work):
+    """Fixture child also embedded in the frozen executable for CI handoff."""
+    import windows_lifetime as lifetime
+    if not getattr(sys, 'frozen', False):
+        assert lifetime.enter_reader()
+    work = Path(work)
+    package = work/'99.0.0/FaroPDF-99.0.0-Instalar.exe'
+    payload = package.read_bytes()
+    candidate = service.Candidate('99.0.0', hashlib.sha256(payload).hexdigest(), len(payload), True)
+    assert service.defer_install(candidate, work, work/'FaroPDF.exe', work, package)
+    (work/'parent.ready').touch()
+    deadline = time.monotonic()+45
+    while not (work/'release-parent').exists():
+        if time.monotonic() > deadline:
+            raise AssertionError('Handoff parent was not released')
+        time.sleep(.05)
 
 
 class FixtureTransport:
@@ -89,23 +108,19 @@ def check_service(work):
     failed.open = unavailable
     rejects(lambda: service.stage_update(candidate,Path(work)/'offline',failed))
     assert not list((Path(work)/'offline').rglob('*.part'))
-    calls = []
-    with patch.object(service,'installed_directory',return_value=Path(work)/'installed'), \
+    with patch.object(service,'defer_install',return_value=True) as handoff, \
+            patch.object(service,'installed_directory',return_value=Path(work)/'installed'), \
             patch.object(service,'other_instances',return_value=True):
-        assert not service.launch_installer(candidate,root,launch=lambda *a,**k:calls.append(a))
-    assert not calls
-    with patch.object(service,'installed_directory',return_value=None):
-        rejects(lambda: service.launch_installer(candidate,root,launch=lambda *a,**k:calls.append(a)))
-    with patch.object(service,'installed_directory',return_value=Path(work)/'installed'), \
-            patch.object(service,'other_instances',return_value=False):
-        assert service.launch_installer(candidate,root,reopen=True,launch=lambda *a,**k:calls.append(a))
-    assert len(calls) == 1 and '/FAROREOPEN=1' in calls[0][0]
-    assert '/NOCLOSEAPPLICATIONS' in calls[0][0]
-    target.write_bytes(b'MZ'+b'x'*(candidate.size-2))
-    with patch.object(service,'installed_directory',return_value=Path(work)/'installed'), \
-            patch.object(service,'other_instances',return_value=False):
-        rejects(lambda: service.launch_installer(candidate,root,launch=lambda *a,**k:calls.append(a)))
-    assert len(calls) == 1
+        assert not service.launch_installer(candidate,root)
+        handoff.assert_not_called()
+        with patch.object(service,'installed_directory',return_value=None):
+            rejects(lambda: service.launch_installer(candidate,root))
+        with patch.object(service,'other_instances',return_value=False):
+            assert service.launch_installer(candidate,root,reopen=True)
+            assert handoff.call_count == 1 and handoff.call_args.args[-1] is True
+            target.write_bytes(b'MZ'+b'x'*(candidate.size-2))
+            rejects(lambda: service.launch_installer(candidate,root))
+            assert handoff.call_count == 1
     return {'updates_verified_manifest_hash_download_and_tampering': True,
             'updates_cancel_offline_partial_cleanup_and_portable': True,
             'updates_multiple_instances_and_final_hash_guard': True}

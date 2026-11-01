@@ -51,13 +51,13 @@ def close_probe(mode,report):
     from PySide6.QtWidgets import QApplication,QDialog
     from PySide6.QtCore import QTimer,Qt,QSettings
     from app import Window
-    app=QApplication([]);w=Window(updates_enabled=False);w.show()
+    app=QApplication([]);w=Window(updates_enabled=False);w.showMaximized()
     w.closed.connect(app.quit,Qt.ConnectionType.QueuedConnection)
     report=Path(report);source=report.with_suffix('.pdf');fixture(source);w.open_file(str(source))
     w.updates.settings=QSettings(str(report.with_suffix('.ini')),QSettings.Format.IniFormat)
     w.updates.root=report.parent/('probe-updates-'+mode)
     w.updates.ready=False;w.updates.candidate=None
-    state={'mode':mode,'closed':False,'cancelled':False}
+    state={'mode':mode,'closed':False,'cancelled':False,'platform':app.platformName()}
     w.closed.connect(lambda:state.update(closed=True))
     if mode=='dialogs':
         w.show_properties();w.show_pages();w.ocr.show_result(dict(changed=[],skipped=[0],empty=[]))

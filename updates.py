@@ -1,5 +1,6 @@
 """Non-blocking release checks and installation after normal document closure."""
 from pathlib import Path
+import json
 import sys
 import threading
 import time
@@ -66,6 +67,12 @@ class UpdateController(QObject):
         self.dialog = None
         self.message = ('Actualización preparada. Se instalará al cerrar Faro.' if self.ready
                         else 'Busca nuevas versiones de Faro PDF en GitHub.')
+        try:
+            status = json.loads((self.root/'install-status.json').read_text(encoding='utf-8-sig'))
+            if status.get('state') == 'failed':
+                self.message = 'La última actualización no terminó: '+str(status.get('detail', ''))
+        except (OSError, ValueError):
+            pass
         self.button.clicked.connect(self.show_dialog)
         self.timer = QTimer(self)
         self.timer.setInterval(60*60*1000)

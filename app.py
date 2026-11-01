@@ -1,4 +1,11 @@
 """Faro PDF: a local Windows reader and object editor powered by PDFium."""
+import sys
+
+if __name__ == '__main__' and getattr(sys, 'frozen', False) and '--ocr-worker' not in sys.argv:
+    from windows_lifetime import enter_reader
+    if not enter_reader():
+        sys.exit(0)
+
 import argparse
 import ctypes as C
 import json
@@ -26,7 +33,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.6.2'
+VERSION = '1.6.3'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -1407,7 +1414,12 @@ def main():
     parser.add_argument('--edit-object', type=int)
     parser.add_argument('--self-test', metavar='REPORT', help=argparse.SUPPRESS)
     parser.add_argument('--close-probe',nargs=2,help=argparse.SUPPRESS)
+    parser.add_argument('--update-handoff-probe',help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.update_handoff_probe:
+        from update_checks import handoff_parent
+        handoff_parent(args.update_handoff_probe)
+        return 0
     if args.close_probe:
         from font_lifecycle_checks import close_probe
         return close_probe(*args.close_probe)

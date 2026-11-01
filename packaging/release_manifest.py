@@ -2,7 +2,7 @@ from pathlib import Path
 import hashlib,json,zipfile
 
 root=Path(__file__).resolve().parents[1]
-version='1.6.2'
+version='1.6.3'
 release=root/'release'
 bundle=root/'dist/FaroPDF'
 with zipfile.ZipFile(release/f'FaroPDF-{version}-Portable.zip') as archive:
@@ -19,10 +19,14 @@ for filename in [f'FaroPDF-{version}-Instalar.exe',f'FaroPDF-{version}-Portable.
     file=release/filename
     artifacts.append({'file':filename,'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()})
 checks={}
-for name in ['source','frozen','native','installer']:
+for name in ['source','frozen','native','installer','update-handoff','update-handoff-frozen']:
     result=json.loads((root/f'.cache/validation/{name}.json').read_text(encoding='utf-8-sig'))
     assert result['passed'],name
     checks[name]=result
+for name in ['source', 'frozen', 'installed']:
+    result=json.loads((root/f'.cache/validation/lifecycle-{name}.json').read_text(encoding='utf-8-sig'))
+    assert result['passed'] and all(row['platform']=='windows' for row in result['real_windows_lifecycle'].values())
+    checks['lifecycle_'+name]=result
 report={'version':version,'unsigned':True,'private_documents_included':False,'portable_integrity_verified':True,'artifacts':artifacts,'checks':checks}
 report['ocr']=json.loads((bundle/'_internal/ocr/manifest.json').read_text(encoding='utf8'))
 (release/'verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')

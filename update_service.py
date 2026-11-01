@@ -4,6 +4,7 @@ HTTPS and GitHub asset digests authenticate the download source and integrity.
 They do not turn an unsigned Windows executable into an Authenticode-signed one.
 """
 from dataclasses import dataclass, asdict
+import base64
 from pathlib import Path
 import ctypes as C
 import hashlib
@@ -13,6 +14,8 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
+import uuid
 import urllib.request
 from urllib.parse import urlsplit
 
@@ -332,7 +335,68 @@ def other_instances(executable=None):
         kernel.CloseHandle(snapshot)
 
 
-def launch_installer(candidate, root, executable=None, reopen=False, launch=None):
+def defer_install(candidate, root, executable, location, installer, reopen=False, launch=None):
+    """Hand off to an inbox process that never loads the installed runtime."""
+    from windows_lifetime import update_guard, kernel
+    root = Path(root).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    gate = update_guard()
+    if gate is None:
+        return False
+    token = uuid.uuid4().hex
+    config_path = root/('handoff-'+token+'.json')
+    config = dict(parent_pid=os.getpid(), executable=str(executable), location=str(location),
+                  installer=str(installer), size=candidate.size, sha256=candidate.sha256,
+                  version=candidate.version, reopen=bool(reopen), status=str(root/'install-status.json'),
+                  log=str(root/'install.log'), ready=str(root/(token+'.ready')),
+                  cancel=str(root/(token+'.cancel')))
+    try:
+        atomic_json(config_path, config)
+        script = (Path(__file__).resolve().parent/'packaging'/'install_update.ps1').read_text(encoding='utf-8')
+        literal = "'"+str(config_path).replace("'", "''")+"'"
+        # Inline script runs under the user's normal PowerShell policy. No
+        # ExecutionPolicy override, shell interpolation, or installed DLLs.
+        command = '& {\n'+script+'\n} -ConfigPath '+literal
+        arguments = [str(Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0/powershell.exe'),
+                     '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden',
+                     '-EncodedCommand', base64.b64encode(command.encode('utf-16-le')).decode('ascii')]
+        startup = subprocess.STARTUPINFO()
+        startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startup.wShowWindow = 0
+        with (root/'handoff.log').open('ab') as log:
+            loader = C.WinDLL('kernel32', use_last_error=True)
+            loader.SetDllDirectoryW.argtypes = [C.c_wchar_p]
+            loader.SetDllDirectoryW.restype = C.c_int
+            frozen_root = getattr(sys, '_MEIPASS', None)
+            if frozen_root and not loader.SetDllDirectoryW(None):
+                raise C.WinError(C.get_last_error())
+            try:
+                worker = (launch or subprocess.Popen)(arguments, cwd=str(root), startupinfo=startup,
+                    stdout=log, stderr=log,
+                    creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP)
+            finally:
+                if frozen_root:
+                    loader.SetDllDirectoryW(str(frozen_root))
+        deadline = time.monotonic()+10
+        while time.monotonic() < deadline:
+            if Path(config['ready']).is_file():
+                return True  # Helper now holds the gate until setup exits.
+            if worker.poll() is not None:
+                break
+            time.sleep(.05)
+        Path(config['cancel']).touch()
+        if worker.poll() is None:
+            # It has not acknowledged the handoff and its parent is still
+            # alive, so it cannot have started setup. Cancel this helper only.
+            worker.terminate()
+            worker.wait(timeout=5)
+        raise UpdateError('No se pudo preparar la actualización (coordinador: '+str(worker.poll())+
+                          '). Se volverá a intentar al cerrar Faro. Revisa handoff.log.')
+    finally:
+        kernel().CloseHandle(gate)
+
+
+def launch_installer(candidate, root, executable=None, reopen=False):
     executable = Path(executable or sys.executable).resolve()
     location = installed_directory(executable)
     if location is None:
@@ -341,17 +405,4 @@ def launch_installer(candidate, root, executable=None, reopen=False, launch=None
         return False
     installer = package_path(root, candidate)
     verify_package(installer, candidate)
-    arguments = [str(installer), '/SP-', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART',
-                 '/CURRENTUSER', '/NOCLOSEAPPLICATIONS', '/NOICONS', '/DIR='+str(location),
-                 '/LOG='+str(Path(root).resolve()/'install.log')]
-    if reopen:
-        arguments.append('/FAROREOPEN=1')
-    options = {'cwd': str(installer.parent)}
-    if sys.platform == 'win32':
-        options['creationflags'] = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
-        startup = subprocess.STARTUPINFO()
-        startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startup.wShowWindow = 0
-        options['startupinfo'] = startup
-    (launch or subprocess.Popen)(arguments, **options)
-    return True
+    return defer_install(candidate, root, executable, location, installer, reopen)
