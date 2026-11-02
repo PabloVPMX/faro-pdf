@@ -85,6 +85,31 @@ de Qt, la instalación y desinstalación aisladas, y la actualización sobre
 restos del paquete anterior. Los archivos que se publican deben provenir
 del workflow de compilación o de un árbol limpio del mismo commit.
 
+## Publicar una compilación verificada
+
+El workflow manual **Publish verified Windows release** recibe el ID de una
+compilación correcta y su SHA exacto. Comprueba la identidad del workflow,
+el informe, los cuatro archivos y sus sumas SHA-256 antes de publicar.
+La versión se obtiene del informe, sin editar el workflow en cada entrega.
+
+La etiqueta debe apuntar al commit compilado. Primero se verifica o crea esa
+etiqueta; después se usa la rama predeterminada como `target_commitish` de la
+publicación. GitHub ignora ese campo para crear una etiqueta que ya existe,
+pero lo utiliza al comprobar el permiso de modificar workflows. Este orden
+evita el HTTP 403 sin un PAT ni permisos adicionales para `GITHUB_TOKEN`.
+Si se necesita una etiqueta nueva y los workflows del commit compilado ya
+difieren de la rama predeterminada, se exige compilar la rama actual antes
+de escribir nada. Véase la [documentación de la API de releases](https://docs.github.com/en/rest/releases/releases#create-a-release).
+
+Repetir una publicación verifica los archivos públicos existentes y conserva
+sus contenidos. Un archivo distinto provoca un error; no se reemplaza.
+Los envíos nuevos se completan en borrador antes de hacerlos públicos.
+Las regresiones del publicador se ejecutan sin red con:
+
+```powershell
+python -m unittest discover -s tests -p test_publish_verified.py -v
+```
+
 ## Dependencias reemplazables
 
 Qt y sus bindings se distribuyen como DLL/PYD separados en `_internal`.

@@ -16,77 +16,47 @@ permissions:
   actions: read
   contents: write
 
+concurrency:
+  group: faro-release-publication
+  cancel-in-progress: false
+
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       VERIFIED_RUN_ID: ${{ inputs.run_id }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6, Node 24
         with:
           persist-credentials: false
+      - name: Test source identity, permissions and repeat publication
+        run: python -m unittest discover -s tests -p test_publish_verified.py -v
       - name: Check build identity and conclusion
         shell: bash
         run: |
           python - <<'PY'
-          import os,string
+          import os,re
           assert os.environ['VERIFIED_RUN_ID'].isdecimal()
-          sha=os.environ['EXPECTED_SHA']
-          assert len(sha)==40 and set(sha)<=set(string.hexdigits)
+          assert re.fullmatch('[a-f0-9]{40}',os.environ['EXPECTED_SHA'])
           PY
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VERIFIED_RUN_ID" > verified-run.json
           python - <<'PY'
           import os,json
           run=json.load(open('verified-run.json'))
-          assert run['conclusion']=='success'
+          assert run['status']=='completed' and run['conclusion']=='success'
           assert run['head_sha']==os.environ['EXPECTED_SHA']
           assert run['head_repository']['full_name']==os.environ['GITHUB_REPOSITORY']
           assert run['name']=='Build and verify Windows'
+          assert run['path']=='.github/workflows/build-windows.yml'
+          assert run['event'] in ('push','workflow_dispatch')
           PY
       - name: Download only the verified release artifact
         run: gh run download "$VERIFIED_RUN_ID" --repo "$GITHUB_REPOSITORY" --name FaroPDF-Windows-verified --dir release
-      - name: Verify manifests, hashes and archive before publication
-        shell: bash
-        run: |
-          python - <<'PY'
-          import hashlib,json,pathlib,zipfile
-          release=pathlib.Path('release')
-          report=json.loads((release/'verification.json').read_text(encoding='utf8'))
-          assert report['version']=='1.6.3'
-          assert report['unsigned'] is True
-          assert report['private_documents_included'] is False
-          assert report['portable_integrity_verified'] is True
-          for name in ('source','frozen','native','installer','update-handoff','update-handoff-frozen','lifecycle_source','lifecycle_frozen','lifecycle_installed'):
-              assert report['checks'][name]['passed'],name
-          expected={'FaroPDF-1.6.3-Instalar.exe','FaroPDF-1.6.3-Portable.zip','SHA256SUMS.txt','verification.json'}
-          assert {p.name for p in release.iterdir()}==expected
-          for artifact in report['artifacts']:
-              path=release/artifact['file']
-              assert path.name in expected and path.parent==release
-              assert path.stat().st_size==artifact['bytes']
-              assert hashlib.sha256(path.read_bytes()).hexdigest()==artifact['sha256']
-          with zipfile.ZipFile(release/'FaroPDF-1.6.3-Portable.zip') as archive:
-              assert archive.testzip() is None
-              assert not any(n.lower().endswith(('.pdf','.pfx','.p12','.key','.pem')) for n in archive.namelist())
-          PY
-          (cd release && sha256sum --check SHA256SUMS.txt)
-      - name: Publish preliminary release and downloadable packages
-        shell: bash
-        run: |
-          gh release create v1.6.3 release/FaroPDF-1.6.3-Instalar.exe release/FaroPDF-1.6.3-Portable.zip release/SHA256SUMS.txt release/verification.json \
-            --repo "$GITHUB_REPOSITORY" --target "$EXPECTED_SHA" \
-            --title 'Faro PDF 1.6.3 — Cierre y actualizaciones coordinados' \
-            --notes-file RELEASE_NOTES.md --prerelease
-          gh release view v1.6.3 --repo "$GITHUB_REPOSITORY" --json url,isDraft,isPrerelease,assets
-      - name: Check public download availability
-        shell: bash
-        run: |
-          curl --fail --head --location --retry 3 "https://github.com/$GITHUB_REPOSITORY/releases/download/v1.6.3/FaroPDF-1.6.3-Instalar.exe"
-          {
-            echo '## Faro PDF 1.6.3'
-            echo "[Public release](https://github.com/$GITHUB_REPOSITORY/releases/tag/v1.6.3)"
-            echo 'Initial preliminary release; binaries are not digitally signed yet.'
-          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify artifacts and publish or verify the existing release
+        id: publication
+        run: python packaging/publish_verified.py
+      - name: Check public installer availability
+        run: curl --fail --head --location --retry 3 "https://github.com/$GITHUB_REPOSITORY/releases/download/${{ steps.publication.outputs.tag }}/FaroPDF-${{ steps.publication.outputs.version }}-Instalar.exe"
