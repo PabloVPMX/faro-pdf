@@ -1,8 +1,8 @@
-FARO PDF 1.6.4 - Edicion de PDF sin componente OCR
+FARO PDF 1.6.5 - Cuadros de texto redimensionables
 Windows 10/11 de 64 bits
 
 INSTALAR
-Ejecuta FaroPDF-1.6.4-Instalar.exe. Incluye Python, Qt y PDFium.
+Ejecuta FaroPDF-1.6.5-Instalar.exe. Incluye Python, Qt y PDFium.
 Si ya tienes Faro, cierra sus ventanas e instala encima sin desinstalar.
 Espera a que termine el instalador antes de volver a abrir Faro.
 El boton Actualizar busca y descarga versiones diariamente mientras usas
@@ -21,7 +21,7 @@ Clic derecho en un PDF > Abrir con > Elegir otra aplicacion > Faro PDF.
 Windows conserva tu lector actual hasta que elijas otro.
 
 PORTABLE
-Extrae TODO FaroPDF-1.6.4-Portable.zip y abre FaroPDF.exe.
+Extrae TODO FaroPDF-1.6.5-Portable.zip y abre FaroPDF.exe.
 Conserva _internal junto al ejecutable.
 
 SELECCIONAR OBJETOS
@@ -41,7 +41,9 @@ conserva las transformaciones originales de la pagina.
 EDICION
 Editar texto: clic en un recuadro. Enter agrega linea; Ctrl+Enter o clic
 fuera aplica; Esc cancela. Opciones flotantes para fuente y tamano.
-El tirador verde mueve cuadros de texto. En Imagenes se puede arrastrar,
+Los bordes y esquinas blancos redimensionan los cuadros añadidos; el ancho
+reorganiza las lineas sin cambiar la letra. El tirador verde mueve el cuadro.
+En Imagenes se puede arrastrar,
 borrar y cambiar de tamano. Edicion incluye insertar imagenes y paginas,
 combinar PDF, mover paginas y borrarlas. Ctrl+Z deshace.
 

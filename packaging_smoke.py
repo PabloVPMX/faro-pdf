@@ -9,7 +9,7 @@ import traceback
 def run(report_path):
     report_path = Path(report_path).resolve()
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    results = {'version': '1.6.4', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
+    results = {'version': '1.6.5', 'frozen': bool(getattr(sys, 'frozen', False)), 'checks': {}}
     checks = results['checks']
     window = None
     try:
@@ -88,6 +88,8 @@ def run(report_path):
         checks.update(check_reader(window, app, work))
         from owned_text_checks import check_owned_text
         checks.update(check_owned_text(window, app, work))
+        from text_resize_checks import check_text_resize
+        checks.update(check_text_resize(window, app, work))
         assert not hasattr(window, 'ocr')
         assert not any('OCR' in action.text() for action in window.edit_menu.actions())
         checks['ocr_removed_from_interface'] = True

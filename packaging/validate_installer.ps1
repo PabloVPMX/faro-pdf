@@ -10,7 +10,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $target '_internal') | Out-
 New-Item -ItemType Directory -Force -Path (Join-Path $target '_internal\ocr\tessdata') | Out-Null
 [IO.File]::WriteAllText((Join-Path $target '_internal\ocr\tesseract.exe'),'obsolete OCR fixture')
 [IO.File]::WriteAllText((Join-Path $target '_internal\ocr\tessdata\spa.traineddata'),'obsolete OCR language fixture')
-$setup=Join-Path $projectRoot 'release\FaroPDF-1.6.4-Instalar.exe'
+$setup=Join-Path $projectRoot 'release\FaroPDF-1.6.5-Instalar.exe'
 $process=Start-Process -FilePath $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS','/VALIDATION=1',('/DIR="'+$target+'"')) -WindowStyle Hidden -Wait -PassThru
 if ($process.ExitCode -ne 0) { throw 'Fallo instalador aislado.' }
 try {

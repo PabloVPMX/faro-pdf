@@ -471,6 +471,20 @@ class Document:
         self._apply_native_bytes(indices,data,record['ordinals'] if record else [])
         return key
 
+    def resize_text_box(self,index,bounds):
+        from owned_text import resize,records
+        run=self.text_run(index)
+        if not run or not run.get('owned') or not run.get('box_bounds'):
+            raise ValueError('Solo se pueden redimensionar los cuadros de texto añadidos.')
+        bounds=tuple(map(float,bounds))
+        if len(bounds)!=4:raise ValueError('El cuadro debe tener cuatro límites.')
+        key=run['layout']
+        if all(abs(a-b)<.01 for a,b in zip(bounds,run['box_bounds'])):return key
+        data,key=resize(self._edit_data,self.index,key,bounds)
+        record=records(data,self.index)[key]
+        self._apply_native_bytes(run['indices'],data,record['ordinals'])
+        return key
+
     def _apply_native_bytes(self, index, after, new_ordinals=None):
         """Reject collateral visual changes before installing a native patch."""
         if after==self._data: return

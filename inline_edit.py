@@ -480,6 +480,12 @@ class InlineController:
             if bounds:
                 rect = rect.united(self.window.canvas.object_rect(bounds))
             self.window.canvas.outline.setRect(rect.adjusted(-2,-2,2,2))
+            if bounds and self.session.get('owned'):
+                frame=self.window.canvas.object_rect(bounds)
+                self.window.canvas.outline.setRect(frame.adjusted(-2,-2,2,2))
+                self.window.canvas.draw_resize_handles(frame)
+                if self.window.canvas.text_grip:
+                    self.window.canvas.text_grip.setRect(QRectF(frame.left(),frame.top()-17,18,7))
         self.reset_caret()
 
     def source_cursor_points(self):

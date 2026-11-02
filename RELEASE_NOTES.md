@@ -1,16 +1,16 @@
-**Faro PDF 1.6.4 elimina el componente OCR.**
+**Faro PDF 1.6.5 permite redimensionar los cuadros de texto añadidos.**
 
-Se retiran la opción Reconocer texto, el diálogo de resultados, el proceso de reconocimiento, Tesseract y sus modelos de español e inglés. El instalador también elimina el runtime OCR de las versiones anteriores.
+En **Editar texto**, selecciona el cuadro y arrastra los tiradores blancos de sus bordes o esquinas para modificar su ancho y alto. El ancho reorganiza las líneas conservando la fuente, el tamaño, el color y los saltos introducidos con Enter. El tirador verde sigue sirviendo para mover el cuadro.
 
-La edición del texto existente conserva su funcionamiento: fuentes, tamaño, formato y posición. Se mantienen imágenes, selección de áreas y objetos, copiar/cortar/pegar, impresión, búsqueda y organización de páginas. Las páginas escaneadas siguen tratándose como imágenes. El texto que ya contiene un PDF, incluidas capas de texto añadidas con otras herramientas, continúa disponible para selección y búsqueda.
+Funciona después de escribir y después de guardar y reabrir el PDF. Si estás escribiendo, al iniciar el arrastre se aplica primero ese texto. El cambio de tamaño se puede deshacer con Ctrl+Z. Los textos originales del PDF conservan su edición habitual y no se convierten en párrafos nuevos automáticamente.
 
 ### Actualizar
 
-Usa **Actualizar** en Faro o cierra sus ventanas y ejecuta **FaroPDF-1.6.4-Instalar.exe** sobre la instalación actual. No hace falta desinstalar. El coordinador espera la salida completa del lector y muestra el progreso.
+Usa **Actualizar** o cierra Faro y ejecuta **FaroPDF-1.6.5-Instalar.exe** sobre tu instalación actual. El instalador conserva las preferencias y la elección del lector predeterminado.
 
-- **FaroPDF-1.6.4-Portable.zip**: extrae todo y conserva `_internal` junto a `FaroPDF.exe`.
-- **SHA256SUMS.txt** y **verification.json**: integridad y comprobaciones del código, ejecutable, DLL, instalación y cierre nativo.
+- **FaroPDF-1.6.5-Portable.zip**: extrae todo y conserva `_internal` junto a `FaroPDF.exe`.
+- **SHA256SUMS.txt** y **verification.json**: integridad y resultados de las comprobaciones.
 
-Las pruebas verifican la ausencia de OCR en menús y paquetes, la eliminación del runtime antiguo al actualizar y las funciones de edición, guardado, portapapeles, impresión y búsqueda. La publicación automática verifica la etiqueta y los archivos sin duplicar ni reemplazar versiones existentes.
+Se prueban arrastres reales de bordes y esquinas, movimiento por el tirador verde, edición pendiente, páginas giradas, guardado/reapertura y Deshacer/Rehacer. Se verifican fuente y formato intactos, contenido original conservado y la otra página visualmente idéntica. También se mantienen las pruebas de imágenes, portapapeles, impresión, búsqueda y cierre real del proceso.
 
-Windows 10/11 x64. Los ejecutables continúan sin firma digital. No se incluyen documentos personales ni se modifican las protecciones de Windows.
+Windows 10/11 x64. Esta versión continúa sin OCR y sin firma digital de Windows. No se incluyen documentos personales ni se modifican las protecciones del sistema.

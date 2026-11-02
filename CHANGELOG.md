@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.6.5 — Cambiar el tamaño de cuadros de texto
+
+- Tiradores de bordes y esquinas en Editar texto para redimensionar cuadros añadidos, después de escribir y tras guardar/reabrir.
+- Reorganiza las líneas al cambiar el ancho sin escalar la fuente ni perder saltos explícitos, color o formato. Los ejes se ajustan de manera independiente.
+- Mantiene el tirador verde para mover; aplica la edición pendiente antes del arrastre y permite Deshacer/Rehacer del cambio de tamaño.
+- Pruebas con eventos reales de ratón, cuatro rotaciones, persistencia y conservación de contenidos originales y otras páginas.
+
 ## 1.6.4 — Retirada del componente OCR
 
 - Retira el menú, diálogo, motor Tesseract y modelos de reconocimiento. El instalador limpia el runtime OCR de instalaciones anteriores.

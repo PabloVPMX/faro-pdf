@@ -29,7 +29,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.6.4'
+VERSION = '1.6.5'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -145,6 +145,7 @@ class Canvas(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.drag_start = None
         self.resize_start=None
+        self.resize_kind=None
         self.text_drag_start=None
         self.text_grip=None
         self.resize_handles=[]
@@ -244,7 +245,12 @@ class Canvas(QGraphicsView):
         if self.owner.mode=='images':self.draw_resize_handles(self.object_rect(bounds))
         elif self.owner.mode=='text':
             rect=self.object_rect(bounds)
-            self.text_grip=self.scene().addRect(QRectF(rect.left(),rect.top()-11,18,7),QPen(QColor('#087f7b')),QColor('#087f7b'))
+            run=self.owner.model.text_run(self.owner.selected) if self.owner.selected is not None else None
+            if run and run.get('owned') and run.get('box_bounds'):
+                rect=self.object_rect(run['box_bounds'])
+                self.outline.setRect(rect.adjusted(-2,-2,2,2))
+                self.draw_resize_handles(rect)
+            self.text_grip=self.scene().addRect(QRectF(rect.left(),rect.top()-17,18,7),QPen(QColor('#087f7b')),QColor('#087f7b'))
             self.text_grip.setToolTip('Arrastra este tirador para mover el cuadro de texto')
             self.text_grip.setAcceptedMouseButtons(Qt.MouseButton.NoButton);self.text_grip.setZValue(20)
 
@@ -254,16 +260,18 @@ class Canvas(QGraphicsView):
         for key,point in [('lt',rect.topLeft()),('rt',rect.topRight()),('lb',rect.bottomLeft()),('rb',rect.bottomRight()),('l',QPointF(rect.left(),rect.center().y())),('r',QPointF(rect.right(),rect.center().y())),('t',QPointF(rect.center().x(),rect.top())),('b',QPointF(rect.center().x(),rect.bottom()))]:
             item=self.scene().addRect(QRectF(point.x()-4,point.y()-4,8,8),QPen(QColor('#087f7b')),QColor('white'))
             item.setZValue(20);item.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
+            item.setToolTip('Arrastra para cambiar el tamaño del cuadro' if self.owner.mode=='text' else 'Arrastra para cambiar el tamaño de la imagen')
             self.resize_handles.append((key,item))
 
     def resized_rect(self,pos):
+        if self.resize_kind=='text':pos=self.bounded_position(pos)
         key,original,index=self.resize_start
         rect=QRectF(original)
         if 'l' in key:rect.setLeft(min(pos.x(),rect.right()-10))
         if 'r' in key:rect.setRight(max(pos.x(),rect.left()+10))
         if 't' in key:rect.setTop(min(pos.y(),rect.bottom()-10))
         if 'b' in key:rect.setBottom(max(pos.y(),rect.top()+10))
-        if len(key)==2:
+        if len(key)==2 and self.resize_kind!='text':
             scale=max(rect.width()/original.width(),rect.height()/original.height())
             width,height=original.width()*scale,original.height()*scale
             if 'l' in key:rect.setLeft(original.right()-width)
@@ -320,6 +328,21 @@ class Canvas(QGraphicsView):
                               owner.document_view.horizontalScrollBar().value())
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
             event.accept(); return
+        if owner.model and owner.mode=='text' and owner.selected is not None and event.button()==Qt.MouseButton.LeftButton:
+            handle=next((key for key,item in self.resize_handles if item.rect().adjusted(-3,-3,3,3).contains(pos)),None)
+            if handle:
+                index=owner.selected
+                if owner.inline.active:
+                    owner.last_text_selection=index
+                    if not owner.inline.commit():event.accept();return
+                    index=owner.last_text_selection
+                run=owner.model.text_run(index) if index is not None else None
+                if run and run.get('owned') and run.get('box_bounds'):
+                    owner.select(index)
+                    self.text_selecting=False
+                    self.resize_kind='text'
+                    self.resize_start=(handle,self.object_rect(run['box_bounds']),index)
+                event.accept();return
         if owner.mode=='text' and event.button()==Qt.MouseButton.LeftButton and self.text_grip and self.text_grip.rect().adjusted(-3,-3,3,3).contains(pos):
             index=owner.selected
             if owner.inline.active:
@@ -334,6 +357,7 @@ class Canvas(QGraphicsView):
             for key,item in self.resize_handles:
                 if item.rect().adjusted(-3,-3,3,3).contains(pos):
                     self.resize_start=(key,self.object_rect(owner.model.objects[owner.selected].get_bounds()),owner.selected)
+                    self.resize_kind='image'
                     event.accept();return
         if event.button() == Qt.MouseButton.RightButton:
             event.accept()
@@ -403,6 +427,7 @@ class Canvas(QGraphicsView):
             delta=self.mapToScene(event.position().toPoint())-self.text_drag_start[0]
             self.outline.setPos(delta)
             if self.text_grip:self.text_grip.setPos(delta)
+            for _,item in self.resize_handles:item.setPos(delta)
             event.accept();return
         if self.resize_start:
             rect=self.resized_rect(self.mapToScene(event.position().toPoint()))
@@ -422,6 +447,10 @@ class Canvas(QGraphicsView):
                 pos=self.mapToScene(event.position().toPoint())
                 grip=self.text_grip and self.text_grip.rect().adjusted(-3,-3,3,3).contains(pos)
                 self.setCursor(Qt.CursorShape.SizeAllCursor if grip else Qt.CursorShape.IBeamCursor if self.hit_object(pos,(TEXT,)) is not None else Qt.CursorShape.ArrowCursor)
+                for key,item in self.resize_handles:
+                    if item.rect().adjusted(-3,-3,3,3).contains(pos):
+                        cursor=Qt.CursorShape.SizeFDiagCursor if key in ('lt','rb') else Qt.CursorShape.SizeBDiagCursor if len(key)==2 else Qt.CursorShape.SizeHorCursor if key in ('l','r') else Qt.CursorShape.SizeVerCursor
+                        self.setCursor(cursor);break
             if self.owner.mode=='images':
                 pos=self.mapToScene(event.position().toPoint());cursor=Qt.CursorShape.ArrowCursor
                 for key,item in self.resize_handles:
@@ -467,6 +496,14 @@ class Canvas(QGraphicsView):
             index=self.resize_start[2];self.resize_start=None
             points=[self.to_page(p) for p in (rect.topLeft(),rect.topRight(),rect.bottomLeft(),rect.bottomRight())]
             xs,ys=zip(*points)
+            if self.resize_kind=='text':
+                self.resize_kind=None
+                run=self.owner.model.text_run(index);key=run['layout'] if run else None
+                self.owner.change(lambda:self.owner.model.resize_text_box(index,(min(xs),min(ys),max(xs),max(ys))))
+                run=next((r for r in self.owner.model.text_runs() if r.get('layout')==key),None)
+                self.owner.select(run['indices'][0] if run else None)
+                event.accept();return
+            self.resize_kind=None
             self.owner.change(lambda:self.owner.model.resize_image(index,(min(xs),min(ys),max(xs),max(ys))))
             self.owner.select(index);event.accept();return
         if self.text_selecting:
@@ -1154,7 +1191,7 @@ class Window(QMainWindow):
             choice=self.inline.fonts.findData(defaults['face'])
             if choice>=0:self.inline.fonts.setCurrentIndex(choice)
         self.inline.select_all();self.inline.refresh_preview();self.focus_editor()
-        self.statusBar().showMessage('Escribe directamente. Enter añade líneas; ajusta fuente y tamaño en las opciones. Arrastra el tirador para mover el cuadro.',15000)
+        self.statusBar().showMessage('Escribe directamente. Enter añade líneas. Arrastra los bordes o esquinas para cambiar el cuadro; el tirador verde lo mueve.',15000)
 
     def choose_image(self):
         if not self.model:return

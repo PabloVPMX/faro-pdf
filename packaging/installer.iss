@@ -1,4 +1,4 @@
-#define AppVersion "1.6.4"
+#define AppVersion "1.6.5"
 [Setup]
 AppId={{FC19C06D-689C-4C3F-ACAA-11E80B6EE439}
 AppName=Faro PDF
@@ -23,7 +23,7 @@ CloseApplications=yes
 AppMutex=Local\FaroPDF.Reader
 SetupMutex=Local\FaroPDF.Installer
 DisableProgramGroupPage=yes
-VersionInfoVersion=1.6.4.0
+VersionInfoVersion=1.6.5.0
 CreateUninstallRegKey=not ValidationMode
 InfoAfterFile=INSTALAR.txt
 

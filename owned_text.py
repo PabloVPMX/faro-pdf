@@ -153,3 +153,21 @@ def move(data,index,key,dx,dy):
     if '/Box' in meta:
         l,b,r,t=map(float,meta['/Box']);box=(l+dx,b+dy,r+dx,t+dy)
     return replace(data,index,key,str(meta['/Text']),float(meta['/Size']),box=box,matrix=matrix)[0]
+
+
+def resize(data,index,key,box):
+    """Reflow only our own text, keeping the font, size and top-left inset."""
+    import math
+    record=records(data,index)[key]
+    if not record['owned'] or '/Box' not in record['meta']:
+        raise ValueError('Solo se pueden redimensionar los cuadros de texto añadidos.')
+    box=tuple(map(float,box))
+    if len(box)!=4 or not all(math.isfinite(v) for v in box) or box[2]<=box[0] or box[3]<=box[1]:
+        raise ValueError('El cuadro debe tener ancho y alto positivos.')
+    meta=record['meta'];old=tuple(map(float,meta['/Box']))
+    matrix=list(map(float,meta['/Matrix']))
+    a,b,c,d=matrix[:4]
+    x_side=2 if a<0 or (abs(a)<1e-8 and c>0) else 0
+    y_side=3 if b<0 or (abs(b)<1e-8 and d>0) else 1
+    matrix[4]+=box[x_side]-old[x_side];matrix[5]+=box[y_side]-old[y_side]
+    return replace(data,index,key,str(meta['/Text']),float(meta['/Size']),box=box,matrix=matrix)

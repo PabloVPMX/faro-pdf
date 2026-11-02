@@ -16,8 +16,8 @@ La interfaz actual está en español.
 
 Para **Windows 10/11 de 64 bits**:
 
-- [Descargar instalador de Faro PDF 1.6.4](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.6.4/FaroPDF-1.6.4-Instalar.exe)
-- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.6.4/FaroPDF-1.6.4-Portable.zip)
+- [Descargar instalador de Faro PDF 1.6.5](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.6.5/FaroPDF-1.6.5-Instalar.exe)
+- [Descargar versión portable](https://github.com/PabloVPMX/faro-pdf/releases/download/v1.6.5/FaroPDF-1.6.5-Portable.zip)
 - [Ver todas las versiones y notas](https://github.com/PabloVPMX/faro-pdf/releases)
 
 El instalador incluye Python, Qt y PDFium; no hace falta instalarlos por
@@ -58,6 +58,7 @@ desactivar el antivirus. Consulta nuestra [Code signing policy](CODE_SIGNING.md)
 - Buscar texto en todas las páginas, con coincidencias resaltadas, mayúsculas y
   palabras completas; avanzar y retroceder con Enter, F3 y Mayús+F3.
 - Imprimir con el diálogo de Windows, seleccionar páginas y revisar la vista previa.
+- Cambiar el ancho y alto de los cuadros de texto añadidos arrastrando bordes y esquinas, también después de guardar y reabrir. Se conserva la fuente y el tamaño de letra; el ancho reorganiza las líneas.
 - Seleccionar el texto existente en el PDF y copiarlo con Ctrl+C.
 - Seleccionar imágenes y cuadros completos, arrastrarlos individualmente o en
   grupo, cortarlos, copiarlos y pegarlos en otra página o ventana de Faro.
