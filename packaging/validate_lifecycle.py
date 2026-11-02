@@ -10,7 +10,7 @@ def validate(command, report):
     report = Path(report).resolve()
     report.parent.mkdir(parents=True, exist_ok=True)
     modes = {}
-    for mode in ('dialogs', 'ocr', 'updates'):
+    for mode in ('dialogs', 'updates'):
         target = report.with_name(report.stem+'-'+mode+'.json')
         target.unlink(missing_ok=True)
         result = subprocess.run([*command, '--close-probe', mode, str(target)],

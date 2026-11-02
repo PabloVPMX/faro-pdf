@@ -1,4 +1,4 @@
-#define AppVersion "1.6.3"
+#define AppVersion "1.6.4"
 [Setup]
 AppId={{FC19C06D-689C-4C3F-ACAA-11E80B6EE439}
 AppName=Faro PDF
@@ -23,7 +23,7 @@ CloseApplications=yes
 AppMutex=Local\FaroPDF.Reader
 SetupMutex=Local\FaroPDF.Installer
 DisableProgramGroupPage=yes
-VersionInfoVersion=1.6.3.0
+VersionInfoVersion=1.6.4.0
 CreateUninstallRegKey=not ValidationMode
 InfoAfterFile=INSTALAR.txt
 
@@ -37,6 +37,8 @@ Name: "desktopicon"; Description: "Crear acceso directo en el escritorio"; Group
 Source: "..\dist\FaroPDF\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [InstallDelete]
+; The removed feature must also disappear when upgrading an existing install.
+Type: filesandordirs; Name: "{app}\_internal\ocr"
 ; Remove only obsolete runtime files from our previous package on upgrade.
 Type: files; Name: "{app}\_internal\icuuc.dll"
 Type: files; Name: "{app}\_internal\icudt78.dll"

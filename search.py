@@ -190,7 +190,7 @@ class SearchController(QObject):
                     self.count.setToolTip('Se muestran las primeras 10 000 coincidencias. Afina el texto de búsqueda.')
                 elif not has_text:
                     self.count.setText('Sin texto buscable')
-                    self.count.setToolTip('Para buscar en escaneos: Edición → Reconocer texto (OCR).')
+                    self.count.setToolTip('La búsqueda encuentra el texto existente en el PDF. Una página escaneada puede contener solo una imagen.')
             elif self.hits:
                 self.draw_active()
         except Exception as error:

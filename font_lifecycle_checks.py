@@ -47,7 +47,7 @@ def fixture(path):
 
 
 def close_probe(mode,report):
-    """A separate real event loop must terminate, including its child OCR."""
+    """A separate real event loop must terminate with auxiliary dialogs."""
     from PySide6.QtWidgets import QApplication,QDialog
     from PySide6.QtCore import QTimer,Qt,QSettings
     from app import Window
@@ -60,13 +60,8 @@ def close_probe(mode,report):
     state={'mode':mode,'closed':False,'cancelled':False,'platform':app.platformName()}
     w.closed.connect(lambda:state.update(closed=True))
     if mode=='dialogs':
-        w.show_properties();w.show_pages();w.ocr.show_result(dict(changed=[],skipped=[0],empty=[]))
-    elif mode=='ocr':
-        assert w.ocr.start([0]);state['cancelled']=True
-        state['cancelled_before_ready']=not w.ocr.ready_ack
-        # Close synchronously, before the first worker ready signal can be
-        # acknowledged. Slow DLL/Python startup must not hold the app open.
-        w.close()
+        w.show_properties();w.show_pages()
+        auxiliary=QDialog(w);auxiliary.setWindowTitle('Prueba de diálogo auxiliar');auxiliary.show()
     elif mode=='updates':
         from update_checks import FixtureTransport
         transport=FixtureTransport();transport.delay=.3
@@ -75,7 +70,7 @@ def close_probe(mode,report):
     QTimer.singleShot(20000,lambda:app.exit(9))
     code=app.exec()
     state['exit_code']=code
-    state['passed']=code==0 and state['closed'] and w.model is None and not w.ocr.busy and w.updates.worker is None
+    state['passed']=code==0 and state['closed'] and w.model is None and w.updates.worker is None
     report.write_text(json.dumps(state),encoding='utf-8')
     app.clipboard().clear()
     return 0 if state['passed'] else 1
@@ -124,7 +119,7 @@ def check_font_lifecycle(window,app,work):
     with patch.object(window.inline,'commit',return_value=False),patch.object(QMessageBox,'question',return_value=QMessageBox.StandardButton.Discard):
         assert window.confirm_discard() and not window.inline.active
     # Public/frozen executable must exit as an OS process, not just hide its UI.
-    for mode in ('dialogs','ocr','updates'):
+    for mode in ('dialogs','updates'):
         report=work/('close-'+mode+'.json')
         command=[sys.executable]
         if not getattr(sys,'frozen',False):command.append(str(Path(__file__).with_name('app.py')))
@@ -134,7 +129,6 @@ def check_font_lifecycle(window,app,work):
                               creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
         assert result.returncode==0,(mode,result.returncode,report.read_text() if report.exists() else '',result.stderr.decode('utf-8','replace')[-2500:])
         assert json.loads(report.read_text())['passed']
-        if mode=='ocr':assert json.loads(report.read_text())['cancelled_before_ready']
     assert source.read_bytes()==original
     return dict(font_standard14_styles_image_to_text=True,cff_original_subsets_new_words_accents_save_undo=True,
-                close_invalid_edit_explicit_discard=True,close_process_with_dialogs_ocr_updates=True)
+                close_invalid_edit_explicit_discard=True,close_process_with_dialogs_updates=True)

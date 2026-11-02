@@ -88,11 +88,6 @@ def check_areas(window,app,work):
     window.area_selection.press(a);window.area_selection.release(b)
     window.refresh_menus();assert window.clipboard_actions['Copiar'].isEnabled()
     app.processEvents();window.grab().save(str(work/'seleccion-area.png'))
-    # OCR's result explicitly explains the unchanged appearance and exposes
-    # already-selectable native text when the page was skipped.
-    window.ocr.show_result(dict(changed=[],skipped=[0],empty=[]));app.processEvents()
-    assert window.ocr.result_dialog.isVisible()
-    window.ocr.result_dialog.close()
     # Rotate through the actual UI action; preserve other pages, original
     # streams, CropBox and one-step undo, including save/reopen persistence.
     before=model._data;old_reader=PdfReader(io.BytesIO(before))
@@ -110,5 +105,4 @@ def check_areas(window,app,work):
     return dict(grouped_form_header_copy_cut_paste_move_undo=True,
                 area_partial_object_copy_cut_paste_image=True,
                 area_cropbox_rotations_outside_pixels_undo=True,
-                ocr_visible_result_explains_skipped_pages=True,
                 rotate_page_left_right_180_save_undo=True)

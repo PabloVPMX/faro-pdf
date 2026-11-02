@@ -15,11 +15,10 @@ a = Analysis(
     [str(root / 'app.py')], pathex=[str(root)],
     binaries=collect_dynamic_libs('pypdfium2_raw'),
     datas=[(str(root/'assets'), 'assets'), (str(root/'packaging'/'INSTALAR.txt'), '.'),
-           (str(root/'.cache'/'ocr-runtime'), 'ocr'),
            (str(root/'packaging'/'install_update.ps1'), 'packaging')]
           + collect_data_files('pypdfium2_raw') + collect_data_files('pypdfium2'),
     hiddenimports=collect_submodules('fontTools') + collect_submodules('pypdf') + ['packaging_smoke'],
-    excludes=['tkinter','matplotlib','scipy','IPython','pytest','winrt','ocr_local'],
+    excludes=['tkinter','matplotlib','scipy','IPython','pytest','winrt','ocr','ocr_engine','ocr_checks','ocr_local'],
     noarchive=False,
 )
 # These are inbox Windows components on our supported Windows 10/11 target.

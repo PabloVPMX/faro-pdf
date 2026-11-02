@@ -1,4 +1,4 @@
-"""Copy selectable native/OCR text without opening the text editor."""
+"""Copy existing selectable PDF text without opening the text editor."""
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPen
 from PySide6.QtWidgets import QApplication

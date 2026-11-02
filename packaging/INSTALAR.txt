@@ -1,8 +1,8 @@
-FARO PDF 1.6.3 - Cierre y actualizaciones coordinados
+FARO PDF 1.6.4 - Edicion de PDF sin componente OCR
 Windows 10/11 de 64 bits
 
 INSTALAR
-Ejecuta FaroPDF-1.6.3-Instalar.exe. Incluye Python, Qt, PDFium y OCR en espanol e ingles.
+Ejecuta FaroPDF-1.6.4-Instalar.exe. Incluye Python, Qt y PDFium.
 Si ya tienes Faro, cierra sus ventanas e instala encima sin desinstalar.
 Espera a que termine el instalador antes de volver a abrir Faro.
 El boton Actualizar busca y descarga versiones diariamente mientras usas
@@ -21,7 +21,7 @@ Clic derecho en un PDF > Abrir con > Elegir otra aplicacion > Faro PDF.
 Windows conserva tu lector actual hasta que elijas otro.
 
 PORTABLE
-Extrae TODO FaroPDF-1.6.3-Portable.zip y abre FaroPDF.exe.
+Extrae TODO FaroPDF-1.6.4-Portable.zip y abre FaroPDF.exe.
 Conserva _internal junto al ejecutable.
 
 SELECCIONAR OBJETOS
@@ -35,14 +35,8 @@ sobre las letras. Se pueden pegar imagenes o texto de otras aplicaciones.
 CONTORNOS VECTORIALES
 Los PDF que dibujan letras como trazos se pueden seleccionar, copiar,
 cortar y mover como graficos. No se cambia su fuente ni se rasterizan.
-Para copiar sus letras como texto, utiliza OCR. La copia de imagenes
+La copia de imagenes
 conserva las transformaciones originales de la pagina.
-
-OCR Y SELECCION
-Edicion > Reconocer texto (OCR): pagina actual, documento o rango.
-Todo se procesa localmente; puedes cancelar y deshacer. Se conservan las
-imagenes. Seleccionar texto permite arrastrar y copiar con Ctrl+C.
-Guarda una copia para conservar el reconocimiento.
 
 EDICION
 Editar texto: clic en un recuadro. Enter agrega linea; Ctrl+Enter o clic
@@ -53,8 +47,8 @@ combinar PDF, mover paginas y borrarlas. Ctrl+Z deshace.
 
 LIMITES
 No incluye firmas de documentos ni PDF protegidos por contrasena.
-OCR permite buscar y copiar escaneos; revisa nombres y cantidades reconocidas.
-No reconstruye las fuentes originales ni convierte imagenes en texto editable. Los documentos complejos pueden rechazar cambios.
+No incluye OCR ni convierte imagenes en texto editable. La seleccion, busqueda
+y edicion de letras utilizan el texto que ya contiene el PDF. Los documentos complejos pueden rechazar cambios.
 Guarda copias y revisalas. El guardado incremental no es redaccion segura
 de datos: el contenido anterior puede permanecer en revisiones internas.
 

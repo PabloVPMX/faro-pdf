@@ -30,7 +30,7 @@ durante esta investigación.
 
 1. Reservar la identidad de producto en Partner Center y usar el Publisher e
    Identity asignados en el manifiesto; no inventar una identidad de producción.
-2. Empaquetar la aplicación Win32 y sus dependencias Qt, PDFium y OCR como MSIX.
+2. Empaquetar la aplicación Win32 y sus dependencias Qt y PDFium como MSIX.
 3. Declarar la asociación .pdf y comprobar «Abrir con», doble clic y argumentos
    con espacios sin cambiar a la fuerza el lector predeterminado.
 4. Separar el canal de actualizaciones: la edición de tienda debe usar el canal
@@ -38,7 +38,7 @@ durante esta investigación.
    Hoy updates.py y update_service.py implementan ese canal EXE.
 5. Verificar rutas de datos temporales y configuración fuera del directorio de
    instalación, apertura/guardado en carpetas elegidas por el usuario, impresión,
-   portapapeles y ejecución del proceso OCR dentro de una instalación MSIX real.
+   portapapeles y actualizaciones dentro de una instalación MSIX real.
 6. Preparar ficha, capturas sintéticas, soporte, privacidad y avisos de licencias;
    ejecutar las regresiones e instalar/actualizar/desinstalar en un entorno de
    prueba antes de enviar a certificación.

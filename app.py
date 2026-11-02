@@ -1,7 +1,7 @@
 """Faro PDF: a local Windows reader and object editor powered by PDFium."""
 import sys
 
-if __name__ == '__main__' and getattr(sys, 'frozen', False) and '--ocr-worker' not in sys.argv:
+if __name__ == '__main__' and getattr(sys, 'frozen', False):
     from windows_lifetime import enter_reader
     if not enter_reader():
         sys.exit(0)
@@ -12,10 +12,6 @@ import json
 import math
 from pathlib import Path
 import sys
-
-if __name__ == '__main__' and len(sys.argv) == 3 and sys.argv[1] == '--ocr-worker':
-    from ocr_engine import worker_main
-    sys.exit(worker_main(sys.argv[2]))
 
 from PySide6.QtCore import Qt, QRectF, QSize, QTimer, QPointF,Signal
 from PySide6.QtGui import QAction, QImage, QPixmap, QPen, QColor, QKeySequence, QIcon, QFontDatabase, QFont, QActionGroup, QTransform
@@ -33,7 +29,7 @@ from inline_edit import InlineController
 from document_view import DocumentView
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '1.6.3'
+VERSION = '1.6.4'
 
 STYLE = '''
 QMainWindow, QDialog { background: #f5f7fa; color: #172b3a; }
@@ -606,7 +602,6 @@ class Window(QMainWindow):
         self.menu_print = self.file_menu.addAction('Imprimir…\tCtrl+P', lambda:self.printing.print_dialog())
         self.menu_preview = self.file_menu.addAction('Vista previa de impresión…', lambda:self.printing.preview())
         self.menu_find = self.file_menu.addAction('Buscar en el documento…\tCtrl+F', lambda:self.search.show())
-        self.menu_ocr = self.edit_menu.addAction('Reconocer texto (OCR)…', lambda:self.ocr.show())
         self.edit_menu.addSeparator()
         self.file_menu.addSeparator()
         self.file_menu.addAction('Actualizaciones…', lambda: self.updates.show_dialog())
@@ -802,9 +797,7 @@ class Window(QMainWindow):
         from printing import PrintController
         self.search = SearchController(self, stack)
         self.printing = PrintController(self)
-        from ocr import OCRController
         from text_selection import TextSelection
-        self.ocr = OCRController(self)
         self.text_selection = TextSelection(self)
         from object_selection import ObjectSelection
         self.object_selection = ObjectSelection(self)
@@ -860,7 +853,6 @@ class Window(QMainWindow):
         self.menu_print.setEnabled(self.model is not None)
         self.menu_preview.setEnabled(self.model is not None)
         self.menu_find.setEnabled(self.model is not None)
-        self.menu_ocr.setEnabled(self.model is not None and not self.ocr.busy)
         self.menu_undo.setEnabled(self.undo_button.isEnabled())
         self.menu_redo.setEnabled(self.redo_button.isEnabled())
         if hasattr(self,'clipboard_actions'):
@@ -1042,7 +1034,7 @@ class Window(QMainWindow):
         self.refresh_controls()
         has_text = any(o.type == TEXT for o in self.model.objects)
         self.notice.setVisible(not has_text)
-        self.notice.setText('Página sin texto seleccionable: usa Seleccionar objetos para los gráficos, u OCR para buscar y copiar letras.')
+        self.notice.setText('Página sin texto seleccionable: usa Seleccionar objetos para los gráficos o Seleccionar área para copiar una región como imagen.')
         self.page_number.blockSignals(True)
         self.page_number.setRange(1, len(self.model.doc))
         self.page_number.setValue(self.model.index+1)
@@ -1306,19 +1298,13 @@ class Window(QMainWindow):
     def closeEvent(self, event):
         if self._closed:event.accept();return
         self._close_requested=True
-        if self.ocr.busy:
-            self.ocr.cancel()
-            self.statusBar().showMessage('Cancelando OCR para cerrar Faro…', 8000)
-            self._close_retry.start()
-            event.ignore()
-            return
         if self.printing.busy:
             self.printing.cancel()
             self._close_retry.start()
             event.ignore()
             return
         if any(worker.isRunning() for worker in self.inline.workers):
-            self.statusBar().showMessage('Espera a que termine el reconocimiento local antes de cerrar.', 8000)
+            self.statusBar().showMessage('Terminando el análisis de la fuente antes de cerrar…', 8000)
             event.ignore()
             self._close_retry.start()
             return
@@ -1351,7 +1337,7 @@ class Window(QMainWindow):
 
     def _retry_close(self):
         if not self._close_requested or self._closed:self._close_retry.stop();return
-        if self.ocr.busy or self.printing.busy or self.updates.worker:return
+        if self.printing.busy or self.updates.worker:return
         if any(worker.isRunning() for worker in self.inline.workers):return
         self._close_retry.stop();self.close()
 

@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.6.4 — Retirada del componente OCR
+
+- Retira el menú, diálogo, motor Tesseract y modelos de reconocimiento. El instalador limpia el runtime OCR de instalaciones anteriores.
+- Conserva la edición, búsqueda y selección del texto existente, junto con imágenes, páginas, portapapeles e impresión.
+- Comprueba que los paquetes nuevos no incluyan motores ni idiomas OCR y que la actualización elimine los archivos obsoletos.
+- Publicación automática con permisos corregidos, versión obtenida del informe y verificación de los archivos existentes al repetir el flujo.
+
 ## 1.6.3 — Actualizaciones después del cierre real
 
 - El actualizador espera a que termine el proceso completo antes de reemplazar el ejecutable o sus DLL. Un coordinador independiente de Python/Qt verifica otra vez la suma SHA-256 y espera la salida del instalador antes de reabrir Faro.

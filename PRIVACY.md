@@ -4,13 +4,6 @@ Faro PDF procesa los documentos en el equipo del usuario. No incorpora
 cuentas de usuario, telemetría, publicidad ni servicios de análisis remoto.
 No envía automáticamente PDF, texto, imágenes ni fuentes a un servidor.
 
-El OCR utiliza Tesseract y modelos incluidos de español e inglés, sin conexión.
-Para reconocer un documento crea una copia temporal local y las imágenes de las
-páginas procesadas. Los archivos temporales se eliminan al terminar o cancelar;
-un cierre forzado del sistema podría dejar restos en la carpeta temporal de Windows.
-El resultado solo se conserva como PDF cuando eliges guardarlo. El OCR no hace
-peticiones a servicios externos ni descarga idiomas durante el uso.
-
 Copiar y cortar colocan los objetos seleccionados en el portapapeles de Windows,
 incluyendo los recursos de fuentes e imágenes necesarios para pegarlos. Otras
 aplicaciones y las funciones de historial o sincronización del portapapeles de
